@@ -5,7 +5,8 @@ import Header from '@/components/Header';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Radar } from 'lucide-react';
+import { motion } from 'framer-motion';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
@@ -30,21 +31,28 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background bg-noise bg-grid">
       <Header />
       <main className="container flex items-center justify-center py-20">
-        <Card className="w-full max-w-md animate-fade-in">
-          <CardHeader className="text-center">
-            <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-lg bg-primary">
-              <span className="text-lg font-bold text-primary-foreground">DR</span>
+        <motion.div
+          initial={{ opacity: 0, y: 24 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+          className="w-full max-w-sm"
+        >
+          <div className="glass-card glow-border rounded-2xl p-8 space-y-6">
+            <div className="text-center space-y-3">
+              <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-xl bg-primary shadow-lg shadow-primary/30 animate-pulse-glow">
+                <Radar className="h-7 w-7 text-primary-foreground" />
+              </div>
+              <div>
+                <h1 className="text-xl font-bold font-display text-gradient">로그인</h1>
+                <p className="text-sm text-muted-foreground mt-1">DENIM Restock Radar</p>
+              </div>
             </div>
-            <CardTitle>로그인</CardTitle>
-            <CardDescription>DENIM Restock Radar에 로그인하세요</CardDescription>
-          </CardHeader>
-          <CardContent>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="email">이메일</Label>
+                <Label htmlFor="email" className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">이메일</Label>
                 <Input
                   id="email"
                   type="email"
@@ -52,10 +60,11 @@ export default function LoginPage() {
                   value={email}
                   onChange={e => setEmail(e.target.value)}
                   required
+                  className="h-11 bg-secondary/50 border-border/60 focus:border-primary/50 focus:ring-primary/20"
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="password">비밀번호</Label>
+                <Label htmlFor="password" className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">비밀번호</Label>
                 <Input
                   id="password"
                   type="password"
@@ -63,18 +72,23 @@ export default function LoginPage() {
                   value={password}
                   onChange={e => setPassword(e.target.value)}
                   required
+                  className="h-11 bg-secondary/50 border-border/60 focus:border-primary/50 focus:ring-primary/20"
                 />
               </div>
               {error && <p className="text-sm text-destructive">{error}</p>}
-              <Button type="submit" className="w-full" disabled={loading}>
+              <Button 
+                type="submit" 
+                className="w-full h-11 bg-primary text-primary-foreground hover:bg-primary/90 font-bold shadow-lg shadow-primary/25" 
+                disabled={loading}
+              >
                 {loading ? '로그인 중...' : '로그인'}
               </Button>
-              <p className="text-center text-xs text-muted-foreground">
-                MVP: 아무 이메일/비밀번호로 로그인 가능합니다.
+              <p className="text-center text-[11px] text-muted-foreground">
+                MVP: 아무 이메일/비밀번호로 로그인 가능합니다
               </p>
             </form>
-          </CardContent>
-        </Card>
+          </div>
+        </motion.div>
       </main>
     </div>
   );
