@@ -79,18 +79,32 @@ const MOCK_PRODUCTS: ProductBrief[] = [
 
 const SIZE_LABELS = ['1(28)', '2(29)', '3(30)', '4(31)', '5(32)', '6(33)'];
 
-function generateOptions(productKey: string, summary: { availableCount: number; soldOutCount: number }) {
-  const total = summary.availableCount + summary.soldOutCount;
-  const options = [];
-  for (let i = 0; i < total; i++) {
-    options.push({
-      optionId: `${productKey}-OPT-${i + 1}`,
-      displayLabel: SIZE_LABELS[i % SIZE_LABELS.length],
-      status: (i < summary.availableCount ? 'AVAILABLE' : 'SOLD_OUT') as 'AVAILABLE' | 'SOLD_OUT',
-      price: MOCK_PRODUCTS.find(p => p.productKey === productKey)?.listPrice ?? 0,
-    });
-  }
-  return options;
+const SITES = [
+  { site: 'modeman', siteLabel: '모드맨', siteUrl: 'https://modeman.co.kr' },
+  { site: 'musinsa', siteLabel: '무신사', siteUrl: 'https://www.musinsa.com' },
+  { site: '29cm', siteLabel: '29CM', siteUrl: 'https://www.29cm.co.kr' },
+];
+
+function generateSiteOptions(productKey: string, summary: { availableCount: number; soldOutCount: number }) {
+  const basePrice = MOCK_PRODUCTS.find(p => p.productKey === productKey)?.listPrice ?? 0;
+  return SITES.map((s, siteIdx) => {
+    const total = summary.availableCount + summary.soldOutCount;
+    const options = [];
+    for (let i = 0; i < total; i++) {
+      // Vary availability per site for realism
+      const isAvailable = siteIdx === 0
+        ? i < summary.availableCount
+        : (i + siteIdx) % (total || 1) < summary.availableCount;
+      options.push({
+        optionId: `${productKey}-${s.site}-OPT-${i + 1}`,
+        displayLabel: SIZE_LABELS[i % SIZE_LABELS.length],
+        status: (isAvailable ? 'AVAILABLE' : 'SOLD_OUT') as 'AVAILABLE' | 'SOLD_OUT',
+        price: basePrice + (siteIdx * 2000 - 2000), // slight price variation
+        site: s.site,
+      });
+    }
+    return { ...s, options };
+  });
 }
 
 const MOCK_EVENTS: RestockEvent[] = [
@@ -131,7 +145,7 @@ export const api = {
       mainImage: brief.imageUrl,
       url: brief.url,
       listPrice: brief.listPrice,
-      options: generateOptions(brief.productKey, brief.optionsSummary),
+      siteOptions: generateSiteOptions(brief.productKey, brief.optionsSummary),
       updatedAt: new Date().toISOString(),
     };
   },

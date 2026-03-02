@@ -16,6 +16,14 @@ export interface ProductOption {
   displayLabel: string;
   status: 'AVAILABLE' | 'SOLD_OUT';
   price: number;
+  site: string;
+}
+
+export interface SiteOptions {
+  site: string;
+  siteLabel: string;
+  siteUrl: string;
+  options: ProductOption[];
 }
 
 export interface ProductDetail {
@@ -25,7 +33,7 @@ export interface ProductDetail {
   mainImage: string;
   url: string;
   listPrice: number;
-  options: ProductOption[];
+  siteOptions: SiteOptions[];
   updatedAt: string;
 }
 

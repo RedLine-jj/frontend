@@ -129,7 +129,7 @@ export default function ProductDetailPage() {
             </a>
 
             <OptionsTable
-              options={product.options}
+              siteOptions={product.siteOptions}
               selectable={isLoggedIn && mode === 'SELECTED_OPTIONS'}
               selectedIds={selectedIds}
               onToggle={handleToggleOption}
