@@ -1,4 +1,4 @@
-import { ProductBrief, ProductDetail, Subscription, RestockEvent, ProductListResponse } from '@/types';
+import { ProductBrief, ProductDetail, Subscription, RestockEvent, ProductListResponse, PriceHistoryEntry } from '@/types';
 
 const BRANDS = ['LEVI\'S', 'WRANGLER', 'LEE', 'NUDIE JEANS', 'A.P.C.'];
 
@@ -107,6 +107,26 @@ function generateSiteOptions(productKey: string, summary: { availableCount: numb
   });
 }
 
+function generatePriceHistory(productKey: string): PriceHistoryEntry[] {
+  const basePrice = MOCK_PRODUCTS.find(p => p.productKey === productKey)?.listPrice ?? 89000;
+  const entries: PriceHistoryEntry[] = [];
+  const now = new Date();
+  for (let dayOffset = 29; dayOffset >= 0; dayOffset--) {
+    const date = new Date(now);
+    date.setDate(date.getDate() - dayOffset);
+    const dateStr = date.toISOString().split('T')[0];
+    SITES.forEach((s, siteIdx) => {
+      // Create realistic price fluctuations per site
+      const siteBase = basePrice + (siteIdx * 2000 - 2000);
+      const wave = Math.sin((dayOffset + siteIdx * 3) * 0.4) * 3000;
+      const noise = Math.round((Math.sin(dayOffset * 1.7 + siteIdx * 5) * 1500));
+      const price = Math.round((siteBase + wave + noise) / 100) * 100;
+      entries.push({ date: dateStr, site: s.site, siteLabel: s.siteLabel, price });
+    });
+  }
+  return entries;
+}
+
 const MOCK_EVENTS: RestockEvent[] = [
   { id: 'evt-1', productKey: 'PM-301', productName: 'Indigo Classic Wide Jeans', displayLabel: '1(30)', type: 'RESTOCK', occurredAt: new Date(Date.now() - 1000 * 60 * 5).toISOString() },
   { id: 'evt-2', productKey: 'PM-304', productName: 'Deep Blue Tapered Jeans', displayLabel: '4(31)', type: 'RESTOCK', occurredAt: new Date(Date.now() - 1000 * 60 * 30).toISOString() },
@@ -178,6 +198,11 @@ export const api = {
   async getEvents(limit = 5): Promise<RestockEvent[]> {
     await delay(200);
     return MOCK_EVENTS.slice(0, limit);
+  },
+
+  async getPriceHistory(productKey: string): Promise<PriceHistoryEntry[]> {
+    await delay(300);
+    return generatePriceHistory(productKey);
   },
 
   isSubscribed(productKey: string): boolean {

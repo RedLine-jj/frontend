@@ -4,6 +4,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/api/client';
 import Header from '@/components/Header';
 import OptionsTable from '@/components/OptionsTable';
+import PriceChart from '@/components/PriceChart';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useAuth } from '@/contexts/AuthContext';
@@ -22,6 +23,12 @@ export default function ProductDetailPage() {
   const { data: product, isLoading } = useQuery({
     queryKey: ['product', productKey],
     queryFn: () => api.getProduct(productKey!),
+    enabled: !!productKey,
+  });
+
+  const { data: priceHistory } = useQuery({
+    queryKey: ['priceHistory', productKey],
+    queryFn: () => api.getPriceHistory(productKey!),
     enabled: !!productKey,
   });
 
@@ -134,6 +141,10 @@ export default function ProductDetailPage() {
               selectedIds={selectedIds}
               onToggle={handleToggleOption}
             />
+
+            {priceHistory && priceHistory.length > 0 && (
+              <PriceChart data={priceHistory} listPrice={product.listPrice} />
+            )}
 
             {isLoggedIn && (
               <div className="glass-card glow-border rounded-xl p-5 space-y-4">
