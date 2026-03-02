@@ -50,6 +50,13 @@ export interface Subscription {
   };
 }
 
+export interface PriceHistoryEntry {
+  date: string;
+  site: string;
+  siteLabel: string;
+  price: number;
+}
+
 export interface RestockEvent {
   id: string;
   productKey: string;
