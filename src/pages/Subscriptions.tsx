@@ -39,50 +39,50 @@ export default function SubscriptionsPage() {
   return (
     <div className="min-h-screen bg-background bg-noise">
       <Header />
-      <div className="border-b border-border/30 bg-grid">
+      <div className="border-b border-border bg-grid">
         <div className="container py-8">
-          <h1 className="text-3xl font-bold font-display text-gradient">내 구독</h1>
-          <p className="mt-2 text-sm text-muted-foreground">관심 상품의 재입고 알림을 관리하세요.</p>
+          <h1 className="text-2xl font-bold font-display text-foreground">내 구독</h1>
+          <p className="mt-1.5 text-sm text-muted-foreground">관심 상품의 재입고 알림을 관리하세요.</p>
         </div>
       </div>
       <main className="container py-6 space-y-4 relative z-10">
         {isLoading ? (
           <div className="flex items-center justify-center py-20">
-            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            <Loader2 className="h-6 w-6 animate-spin text-primary" />
           </div>
         ) : subs && subs.length > 0 ? (
-          <div className="space-y-3">
+          <div className="space-y-2">
             {subs.map((sub, i) => (
               <motion.div
                 key={sub.productKey}
-                initial={{ opacity: 0, y: 12 }}
+                initial={{ opacity: 0, y: 8 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: i * 0.05 }}
-                className="glass-card glow-border rounded-xl flex items-center gap-4 p-4"
+                transition={{ delay: i * 0.04 }}
+                className="glass-card rounded-xl flex items-center gap-4 p-4"
               >
                 {sub.productImage && (
-                  <img src={sub.productImage} alt="" className="h-16 w-16 rounded-lg object-cover flex-shrink-0" />
+                  <img src={sub.productImage} alt="" className="h-14 w-14 rounded-lg object-cover flex-shrink-0" />
                 )}
                 <div className="flex-1 min-w-0">
                   <p className="text-[10px] font-semibold tracking-[0.15em] uppercase text-primary">{sub.brand}</p>
-                  <p className="truncate font-bold font-display text-sm">{sub.productName}</p>
-                  <div className="mt-1.5 flex gap-1.5 flex-wrap">
-                    <Badge variant="outline" className="text-[10px] font-semibold border-border/50 text-muted-foreground">
+                  <p className="truncate font-semibold font-display text-sm text-foreground">{sub.productName}</p>
+                  <div className="mt-1 flex gap-1 flex-wrap">
+                    <Badge variant="outline" className="text-[10px] font-medium">
                       {sub.mode === 'ALL_OPTIONS' ? '전체 옵션' : `선택 ${sub.selectedOptionIds.length}개`}
                     </Badge>
                     {sub.optionsSummary && sub.optionsSummary.availableCount > 0 && (
-                      <Badge variant="outline" className="status-available text-[10px] font-semibold">재고 {sub.optionsSummary.availableCount}</Badge>
+                      <Badge variant="outline" className="status-available text-[10px]">{sub.optionsSummary.availableCount} 재고</Badge>
                     )}
                     {sub.optionsSummary && sub.optionsSummary.soldOutCount > 0 && (
-                      <Badge variant="outline" className="status-soldout text-[10px] font-semibold">품절 {sub.optionsSummary.soldOutCount}</Badge>
+                      <Badge variant="outline" className="status-soldout text-[10px]">{sub.optionsSummary.soldOutCount} 품절</Badge>
                     )}
                   </div>
                 </div>
-                <div className="flex gap-1.5 flex-shrink-0">
-                  <Button size="icon" variant="ghost" className="h-9 w-9 text-muted-foreground hover:text-foreground hover:bg-secondary" onClick={() => navigate(`/product/${sub.productKey}`)}>
+                <div className="flex gap-1 flex-shrink-0">
+                  <Button size="icon" variant="ghost" className="h-8 w-8 text-muted-foreground hover:text-foreground" onClick={() => navigate(`/product/${sub.productKey}`)}>
                     <Eye className="h-4 w-4" />
                   </Button>
-                  <Button size="icon" variant="ghost" className="h-9 w-9 text-muted-foreground hover:text-destructive hover:bg-destructive/10" onClick={() => handleUnsubscribe(sub.productKey)}>
+                  <Button size="icon" variant="ghost" className="h-8 w-8 text-muted-foreground hover:text-destructive" onClick={() => handleUnsubscribe(sub.productKey)}>
                     <BellOff className="h-4 w-4" />
                   </Button>
                 </div>
@@ -95,10 +95,10 @@ export default function SubscriptionsPage() {
             animate={{ opacity: 1 }}
             className="flex flex-col items-center py-20 text-muted-foreground"
           >
-            <Package className="mb-4 h-12 w-12 text-muted-foreground/40" />
-            <p className="font-display font-semibold">구독한 상품이 없습니다</p>
+            <Package className="mb-3 h-10 w-10 text-muted-foreground/40" />
+            <p className="font-display font-semibold text-foreground">구독한 상품이 없습니다</p>
             <p className="text-sm mt-1">관심 있는 데님을 구독해보세요.</p>
-            <Button variant="outline" size="sm" className="mt-4 border-border/60 hover:bg-secondary" onClick={() => navigate('/')}>
+            <Button variant="outline" size="sm" className="mt-4" onClick={() => navigate('/')}>
               상품 둘러보기
             </Button>
           </motion.div>

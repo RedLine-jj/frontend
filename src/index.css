@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700&family=Space+Grotesk:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -6,56 +6,63 @@
 
 @layer base {
   :root {
-    --background: 225 25% 6%;
-    --foreground: 220 20% 92%;
+    /* Base: white / off-white */
+    --background: 40 20% 97%;
+    --foreground: 220 25% 14%;
 
-    --card: 225 20% 10%;
-    --card-foreground: 220 20% 92%;
+    /* Cards: clean white */
+    --card: 0 0% 100%;
+    --card-foreground: 220 25% 14%;
 
-    --popover: 225 20% 12%;
-    --popover-foreground: 220 20% 92%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 220 25% 14%;
 
-    --primary: 38 80% 55%;
-    --primary-foreground: 225 25% 6%;
+    /* Accent: strong denim blue */
+    --primary: 216 72% 45%;
+    --primary-foreground: 0 0% 100%;
 
-    --secondary: 225 18% 16%;
-    --secondary-foreground: 220 20% 85%;
+    /* Secondary: off-white / light gray */
+    --secondary: 220 14% 94%;
+    --secondary-foreground: 220 20% 30%;
 
-    --muted: 225 15% 14%;
-    --muted-foreground: 220 10% 52%;
+    /* Muted: subtle warm gray */
+    --muted: 220 12% 92%;
+    --muted-foreground: 220 10% 46%;
 
-    --accent: 226 55% 25%;
-    --accent-foreground: 220 20% 92%;
+    /* Accent: lighter denim */
+    --accent: 216 60% 94%;
+    --accent-foreground: 216 72% 40%;
 
     --destructive: 0 65% 52%;
     --destructive-foreground: 0 0% 100%;
 
-    --success: 152 60% 42%;
+    --success: 152 55% 40%;
     --success-foreground: 0 0% 100%;
 
     --warning: 38 92% 50%;
     --warning-foreground: 0 0% 100%;
 
-    --border: 225 15% 16%;
-    --input: 225 15% 16%;
-    --ring: 38 80% 55%;
+    /* Borders: very subtle */
+    --border: 220 14% 88%;
+    --input: 220 14% 88%;
+    --ring: 216 72% 45%;
 
     --radius: 0.75rem;
 
-    --sidebar-background: 225 20% 8%;
-    --sidebar-foreground: 220 20% 85%;
-    --sidebar-primary: 38 80% 55%;
-    --sidebar-primary-foreground: 225 25% 6%;
-    --sidebar-accent: 225 15% 14%;
-    --sidebar-accent-foreground: 220 20% 85%;
-    --sidebar-border: 225 15% 16%;
-    --sidebar-ring: 38 80% 55%;
+    --sidebar-background: 0 0% 100%;
+    --sidebar-foreground: 220 20% 30%;
+    --sidebar-primary: 216 72% 45%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 216 60% 94%;
+    --sidebar-accent-foreground: 216 72% 40%;
+    --sidebar-border: 220 14% 88%;
+    --sidebar-ring: 216 72% 45%;
 
-    --glass: 225 20% 12%;
-    --glass-border: 225 15% 20%;
-    --glow-primary: 38 80% 55%;
-    --gradient-indigo-start: 226 60% 18%;
-    --gradient-indigo-end: 226 55% 12%;
+    /* Custom tokens */
+    --denim: 216 72% 45%;
+    --denim-light: 216 60% 94%;
+    --navy: 220 35% 18%;
+    --charcoal: 220 15% 28%;
   }
 }
 
@@ -66,42 +73,58 @@
 
   body {
     @apply bg-background text-foreground antialiased;
-    font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   }
 
   h1, h2, h3, h4, h5, h6 {
-    font-family: 'Space Grotesk', sans-serif;
+    font-family: 'Outfit', sans-serif;
   }
 }
 
 @layer utilities {
   .status-available {
-    @apply bg-success/15 text-success border-success/25;
+    @apply bg-success/10 text-success border-success/20;
   }
   .status-soldout {
-    @apply bg-destructive/15 text-destructive border-destructive/25;
+    @apply bg-destructive/10 text-destructive border-destructive/20;
   }
+
+  /* Clean card with subtle shadow */
   .glass-card {
-    background: hsl(var(--glass) / 0.6);
-    backdrop-filter: blur(16px);
-    border: 1px solid hsl(var(--glass-border) / 0.5);
+    background: hsl(var(--card));
+    border: 1px solid hsl(var(--border));
+    box-shadow: 0 1px 3px 0 hsl(220 25% 14% / 0.04), 0 1px 2px -1px hsl(220 25% 14% / 0.04);
   }
+
   .glow-border {
-    box-shadow: 0 0 0 1px hsl(var(--glass-border)), 
-                0 0 20px -8px hsl(var(--glow-primary) / 0.15);
+    box-shadow: 0 1px 3px 0 hsl(220 25% 14% / 0.06), 0 1px 2px -1px hsl(220 25% 14% / 0.04);
   }
+
+  .glass-card:hover {
+    box-shadow: 0 4px 12px 0 hsl(216 72% 45% / 0.08), 0 2px 4px -1px hsl(220 25% 14% / 0.04);
+  }
+
+  /* Denim blue gradient text */
   .text-gradient {
-    background: linear-gradient(135deg, hsl(var(--primary)), hsl(38 90% 68%));
+    background: linear-gradient(135deg, hsl(var(--navy)), hsl(var(--denim)));
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
   }
+
+  /* Subtle denim texture grid */
   .bg-grid {
-    background-image: 
-      linear-gradient(hsl(var(--border) / 0.3) 1px, transparent 1px),
-      linear-gradient(90deg, hsl(var(--border) / 0.3) 1px, transparent 1px);
-    background-size: 64px 64px;
+    background-image:
+      repeating-linear-gradient(
+        45deg,
+        transparent,
+        transparent 2px,
+        hsl(216 72% 45% / 0.02) 2px,
+        hsl(216 72% 45% / 0.02) 4px
+      );
   }
+
+  /* Very subtle noise for denim grain feel */
   .bg-noise {
     position: relative;
   }
@@ -109,8 +132,8 @@
     content: '';
     position: absolute;
     inset: 0;
-    opacity: 0.03;
-    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    opacity: 0.015;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='1.2' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
     pointer-events: none;
     z-index: 0;
   }

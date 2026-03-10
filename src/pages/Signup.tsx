@@ -5,7 +5,6 @@ import Header from '@/components/Header';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { UserPlus } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 export default function SignupPage() {
@@ -36,68 +35,38 @@ export default function SignupPage() {
   };
 
   return (
-    <div className="min-h-screen bg-background bg-noise bg-grid">
+    <div className="min-h-screen bg-background">
       <Header />
       <main className="container flex items-center justify-center py-20">
         <motion.div
-          initial={{ opacity: 0, y: 24 }}
+          initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
+          transition={{ duration: 0.4 }}
           className="w-full max-w-sm"
         >
-          <div className="glass-card glow-border rounded-2xl p-8 space-y-6">
-            <div className="text-center space-y-3">
-              <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-xl bg-primary shadow-lg shadow-primary/30 animate-pulse-glow">
-                <UserPlus className="h-7 w-7 text-primary-foreground" />
+          <div className="glass-card rounded-xl p-8 space-y-6">
+            <div className="text-center space-y-2">
+              <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-xl bg-primary">
+                <span className="text-lg font-bold text-primary-foreground">DR</span>
               </div>
-              <div>
-                <h1 className="text-xl font-bold font-display text-gradient">회원가입</h1>
-                <p className="text-sm text-muted-foreground mt-1">DENIM Restock Radar</p>
-              </div>
+              <h1 className="text-xl font-bold font-display text-foreground">회원가입</h1>
+              <p className="text-sm text-muted-foreground">DENIM RADAR</p>
             </div>
             <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="name" className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">이름</Label>
-                <Input
-                  id="name"
-                  type="text"
-                  placeholder="홍길동"
-                  value={name}
-                  onChange={e => setName(e.target.value)}
-                  required
-                  className="h-11 bg-secondary/50 border-border/60 focus:border-primary/50 focus:ring-primary/20"
-                />
+              <div className="space-y-1.5">
+                <Label htmlFor="name" className="text-xs font-medium text-muted-foreground">이름</Label>
+                <Input id="name" type="text" placeholder="홍길동" value={name} onChange={e => setName(e.target.value)} required className="h-10" />
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="email" className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">이메일</Label>
-                <Input
-                  id="email"
-                  type="email"
-                  placeholder="you@example.com"
-                  value={email}
-                  onChange={e => setEmail(e.target.value)}
-                  required
-                  className="h-11 bg-secondary/50 border-border/60 focus:border-primary/50 focus:ring-primary/20"
-                />
+              <div className="space-y-1.5">
+                <Label htmlFor="email" className="text-xs font-medium text-muted-foreground">이메일</Label>
+                <Input id="email" type="email" placeholder="you@example.com" value={email} onChange={e => setEmail(e.target.value)} required className="h-10" />
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="password" className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">비밀번호</Label>
-                <Input
-                  id="password"
-                  type="password"
-                  placeholder="••••••••"
-                  value={password}
-                  onChange={e => setPassword(e.target.value)}
-                  required
-                  className="h-11 bg-secondary/50 border-border/60 focus:border-primary/50 focus:ring-primary/20"
-                />
+              <div className="space-y-1.5">
+                <Label htmlFor="password" className="text-xs font-medium text-muted-foreground">비밀번호</Label>
+                <Input id="password" type="password" placeholder="••••••••" value={password} onChange={e => setPassword(e.target.value)} required className="h-10" />
               </div>
               {error && <p className="text-sm text-destructive">{error}</p>}
-              <Button
-                type="submit"
-                className="w-full h-11 bg-primary text-primary-foreground hover:bg-primary/90 font-bold shadow-lg shadow-primary/25"
-                disabled={loading}
-              >
+              <Button type="submit" className="w-full h-10 font-semibold" disabled={loading}>
                 {loading ? '가입 중...' : '회원가입'}
               </Button>
               <p className="text-center text-sm text-muted-foreground">
