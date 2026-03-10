@@ -74,6 +74,7 @@ export interface ModelTypeDto {
 
 export interface ModelsParams extends CursorParams {
   brandId?: number;
+  brandIds?: number[];
 }
 
 // ── SiteOptions ──
