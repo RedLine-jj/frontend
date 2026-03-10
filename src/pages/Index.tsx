@@ -41,7 +41,7 @@ export default function Dashboard() {
         toast({ title: '구독 해제됨' });
       } else {
         await api.subscribe({ productKey, mode: 'ALL_OPTIONS', selectedOptionIds: [] });
-        toast({ title: '✨ 구독 완료!' });
+        toast({ title: '구독 완료' });
       }
       queryClient.invalidateQueries({ queryKey: ['subscriptions'] });
     } catch {
@@ -55,15 +55,15 @@ export default function Dashboard() {
     <div className="min-h-screen bg-background bg-noise">
       <Header onRefresh={handleRefresh} />
       <EventsToast />
-      
-      {/* Hero section */}
-      <div className="border-b border-border/30 bg-grid">
+
+      {/* Hero */}
+      <div className="border-b border-border bg-grid">
         <div className="container py-8">
-          <h1 className="text-3xl font-bold font-display text-gradient sm:text-4xl">
+          <h1 className="text-2xl font-bold font-display text-foreground sm:text-3xl">
             재입고 레이더
           </h1>
-          <p className="mt-2 text-sm text-muted-foreground max-w-md">
-            모드맨 데님 카테고리 상품의 재고를 실시간으로 추적하고, 관심 상품 재입고 알림을 받아보세요.
+          <p className="mt-1.5 text-sm text-muted-foreground max-w-md">
+            데님 상품의 재고를 실시간으로 추적하고, 재입고 알림을 받아보세요.
           </p>
         </div>
       </div>
@@ -78,15 +78,14 @@ export default function Dashboard() {
 
         {isLoading ? (
           <div className="flex items-center justify-center py-20">
-            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            <Loader2 className="h-6 w-6 animate-spin text-primary" />
           </div>
         ) : error ? (
-          <div className="glass-card rounded-xl border border-destructive/20 p-8 text-center">
-            <p className="text-destructive font-medium">데이터를 불러올 수 없습니다.</p>
-            <p className="text-sm text-muted-foreground mt-1">다시 시도해주세요.</p>
+          <div className="glass-card rounded-xl p-8 text-center">
+            <p className="text-destructive font-medium text-sm">데이터를 불러올 수 없습니다.</p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
             {data?.items.map((product, i) => (
               <ProductCard
                 key={product.productKey}
@@ -97,7 +96,7 @@ export default function Dashboard() {
               />
             ))}
             {data?.items.length === 0 && (
-              <div className="col-span-full py-16 text-center text-muted-foreground">
+              <div className="col-span-full py-16 text-center text-muted-foreground text-sm">
                 검색 결과가 없습니다.
               </div>
             )}
