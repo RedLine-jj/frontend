@@ -6,6 +6,7 @@ import Header from "@/components/Header";
 import SummaryCards from "@/components/SummaryCards";
 import SearchFilter from "@/components/SearchFilter";
 import ModelGrid from "@/components/ModelGrid";
+import ScrollToTopButton from "@/components/ui/ScrollToTopButton";
 
 export default function Dashboard() {
   const [brandIds, setBrandIds] = useState<number[]>([]);
@@ -107,6 +108,7 @@ export default function Dashboard() {
           fetchNextPage={fetchNextPage}
         />
       </main>
+      <ScrollToTopButton />
     </div>
   );
 }
