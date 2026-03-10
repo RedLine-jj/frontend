@@ -27,42 +27,27 @@ const chipUnselected = [
 
 export default function SearchFilter({ brands, selectedBrandId, onBrandChange }: SearchFilterProps) {
   return (
-    <div className="glass-card rounded-xl p-3">
-      <div className="flex items-center gap-3">
-        {/* Filter icon badge */}
-        <div className="flex-shrink-0 flex items-center justify-center w-8 h-8 rounded-lg bg-primary/10">
+    <div className="glass-card rounded-xl p-4">
+      <div className="flex items-start gap-3">
+        <div className="flex-shrink-0 flex items-center justify-center w-8 h-8 rounded-lg bg-primary/10 mt-0.5">
           <Filter className="h-4 w-4 text-primary" />
         </div>
-
-        {/* Scrollable chip row — scrollbar hidden via inline styles + webkit pseudo */}
-        <div className="relative flex-1 overflow-hidden">
-          <style>{`.chip-scroll::-webkit-scrollbar{display:none}`}</style>
-          <div
-            className="chip-scroll flex gap-2 overflow-x-auto py-0.5 pr-2"
-            style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+        <div className="flex flex-wrap gap-2">
+          <button
+            onClick={() => onBrandChange(undefined)}
+            className={`${chipBase} ${selectedBrandId === undefined ? chipSelected : chipUnselected}`}
           >
-            {/* "All" chip */}
+            전체
+          </button>
+          {brands.map(brand => (
             <button
-              onClick={() => onBrandChange(undefined)}
-              className={`${chipBase} ${selectedBrandId === undefined ? chipSelected : chipUnselected}`}
+              key={brand.id}
+              onClick={() => onBrandChange(brand.id)}
+              className={`${chipBase} ${selectedBrandId === brand.id ? chipSelected : chipUnselected}`}
             >
-              전체
+              {brand.brandNameKo || brand.brandName}
             </button>
-
-            {/* Brand chips */}
-            {brands.map(brand => (
-              <button
-                key={brand.id}
-                onClick={() => onBrandChange(brand.id)}
-                className={`${chipBase} ${selectedBrandId === brand.id ? chipSelected : chipUnselected}`}
-              >
-                {brand.brandNameKo || brand.brandName}
-              </button>
-            ))}
-          </div>
-
-          {/* Right fade hint for scroll overflow */}
-          <div className="pointer-events-none absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-[hsl(var(--card))] to-transparent" />
+          ))}
         </div>
       </div>
     </div>
