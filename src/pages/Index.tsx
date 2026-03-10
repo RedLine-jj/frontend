@@ -18,6 +18,12 @@ export default function Dashboard() {
     queryFn: () => brandsApi.getBrands(),
   });
 
+  // 전체 모델 수
+  const { data: modelCount } = useQuery({
+    queryKey: ['models', 'count'],
+    queryFn: () => modelsApi.getModelCount(),
+  });
+
   // 모델 목록 (커서 페이징)
   const {
     data: modelsData,
@@ -32,7 +38,6 @@ export default function Dashboard() {
   );
 
   const allModels = modelsData?.pages.flatMap(p => p.content) ?? [];
-  const totalModels = allModels.length;
 
   const handleRefresh = useCallback(() => {
     queryClient.invalidateQueries({ queryKey: ['models'] });
@@ -78,7 +83,7 @@ export default function Dashboard() {
 
       <main className="container py-6 space-y-6 relative z-10">
         <SummaryCards
-          totalModels={totalModels}
+          totalModels={modelCount ?? 0}
           totalBrands={brands?.length ?? 0}
         />
         <SearchFilter

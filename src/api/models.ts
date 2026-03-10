@@ -10,3 +10,8 @@ export function getModels(params?: ModelsParams) {
 export function getModelTypes() {
   return unwrap<ModelTypeDto[]>(http.get('/api/models/types'));
 }
+
+/** GET /api/models/count */
+export function getModelCount() {
+  return unwrap<number>(http.get('/api/models/count'));
+}
