@@ -8,8 +8,8 @@ import { Label } from '@/components/ui/label';
 import { motion } from 'framer-motion';
 
 export default function SignupPage() {
-  const [name, setName] = useState('');
-  const [email, setEmail] = useState('');
+  const [userId, setUserId] = useState('');
+  const [userName, setUserName] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -19,14 +19,15 @@ export default function SignupPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
-    if (password.length < 4) {
-      setError('비밀번호는 4자 이상이어야 합니다.');
+    if (password.length < 8) {
+      setError('비밀번호는 8자 이상이어야 합니다.');
       return;
     }
     setLoading(true);
     try {
-      await signup(email, password, name);
-      navigate('/');
+      const message = await signup(userId, password, userName);
+      // 가입 성공 → 로그인 페이지로 이동 (자동 로그인 안 됨)
+      navigate('/login', { state: { message } });
     } catch (err: any) {
       setError(err.message || '회원가입에 실패했습니다.');
     } finally {
@@ -54,16 +55,16 @@ export default function SignupPage() {
             </div>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-1.5">
-                <Label htmlFor="name" className="text-xs font-medium text-muted-foreground">이름</Label>
-                <Input id="name" type="text" placeholder="홍길동" value={name} onChange={e => setName(e.target.value)} required className="h-10" />
+                <Label htmlFor="userId" className="text-xs font-medium text-muted-foreground">아이디</Label>
+                <Input id="userId" type="text" placeholder="아이디를 입력하세요" value={userId} onChange={e => setUserId(e.target.value)} required className="h-10" />
               </div>
               <div className="space-y-1.5">
-                <Label htmlFor="email" className="text-xs font-medium text-muted-foreground">이메일</Label>
-                <Input id="email" type="email" placeholder="you@example.com" value={email} onChange={e => setEmail(e.target.value)} required className="h-10" />
+                <Label htmlFor="userName" className="text-xs font-medium text-muted-foreground">이름</Label>
+                <Input id="userName" type="text" placeholder="홍길동" value={userName} onChange={e => setUserName(e.target.value)} required className="h-10" />
               </div>
               <div className="space-y-1.5">
                 <Label htmlFor="password" className="text-xs font-medium text-muted-foreground">비밀번호</Label>
-                <Input id="password" type="password" placeholder="••••••••" value={password} onChange={e => setPassword(e.target.value)} required className="h-10" />
+                <Input id="password" type="password" placeholder="8자 이상" value={password} onChange={e => setPassword(e.target.value)} required className="h-10" />
               </div>
               {error && <p className="text-sm text-destructive">{error}</p>}
               <Button type="submit" className="w-full h-10 font-semibold" disabled={loading}>

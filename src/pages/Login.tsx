@@ -8,7 +8,7 @@ import { Label } from '@/components/ui/label';
 import { motion } from 'framer-motion';
 
 export default function LoginPage() {
-  const [email, setEmail] = useState('');
+  const [userId, setUserId] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -20,7 +20,7 @@ export default function LoginPage() {
     setError('');
     setLoading(true);
     try {
-      await login(email, password);
+      await login(userId, password);
       navigate('/');
     } catch (err: any) {
       setError(err.message || '로그인에 실패했습니다.');
@@ -49,8 +49,8 @@ export default function LoginPage() {
             </div>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-1.5">
-                <Label htmlFor="email" className="text-xs font-medium text-muted-foreground">이메일</Label>
-                <Input id="email" type="email" placeholder="you@example.com" value={email} onChange={e => setEmail(e.target.value)} required className="h-10" />
+                <Label htmlFor="userId" className="text-xs font-medium text-muted-foreground">아이디</Label>
+                <Input id="userId" type="text" placeholder="아이디를 입력하세요" value={userId} onChange={e => setUserId(e.target.value)} required className="h-10" />
               </div>
               <div className="space-y-1.5">
                 <Label htmlFor="password" className="text-xs font-medium text-muted-foreground">비밀번호</Label>

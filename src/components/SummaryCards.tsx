@@ -1,25 +1,19 @@
-import { Package, AlertTriangle, Clock } from 'lucide-react';
+import { Package, Layers } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 interface SummaryCardsProps {
-  totalProducts: number;
-  soldOutOptions: number;
-  updatedAt: string;
+  totalModels: number;
+  totalBrands: number;
 }
 
-export default function SummaryCards({ totalProducts, soldOutOptions, updatedAt }: SummaryCardsProps) {
-  const formattedTime = updatedAt
-    ? new Date(updatedAt).toLocaleString('ko-KR', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })
-    : '-';
-
+export default function SummaryCards({ totalModels, totalBrands }: SummaryCardsProps) {
   const cards = [
-    { label: '총 상품', value: totalProducts, icon: Package, iconBg: 'bg-denim-light text-primary' },
-    { label: '품절 옵션', value: soldOutOptions, icon: AlertTriangle, iconBg: 'bg-destructive/10 text-destructive' },
-    { label: '최근 업데이트', value: formattedTime, icon: Clock, iconBg: 'bg-muted text-muted-foreground' },
+    { label: '총 모델', value: totalModels, icon: Package, iconBg: 'bg-denim-light text-primary' },
+    { label: '브랜드', value: totalBrands, icon: Layers, iconBg: 'bg-muted text-muted-foreground' },
   ];
 
   return (
-    <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+    <div className="grid grid-cols-2 gap-3">
       {cards.map((c, i) => (
         <motion.div
           key={c.label}

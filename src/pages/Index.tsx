@@ -1,60 +1,73 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useRef, useEffect } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { api } from '@/api/client';
+import { modelsApi, brandsApi } from '@/api';
+import { useCursorPagination } from '@/hooks/useCursorPagination';
 import Header from '@/components/Header';
 import SummaryCards from '@/components/SummaryCards';
 import SearchFilter from '@/components/SearchFilter';
-import ProductCard from '@/components/ProductCard';
-import EventsToast from '@/components/EventsToast';
-import { useAuth } from '@/contexts/AuthContext';
-import { useToast } from '@/hooks/use-toast';
+import ModelCard from '@/components/ModelCard';
 import { Loader2 } from 'lucide-react';
 
 export default function Dashboard() {
-  const [query, setQuery] = useState('');
-  const [filter, setFilter] = useState('');
+  const [brandId, setBrandId] = useState<number | undefined>(undefined);
   const queryClient = useQueryClient();
-  const { isLoggedIn } = useAuth();
-  const { toast } = useToast();
 
-  const { data, isLoading, error } = useQuery({
-    queryKey: ['products', query, filter],
-    queryFn: () => api.getProducts({ query, filter }),
+  // 브랜드 목록 (필터용)
+  const { data: brands } = useQuery({
+    queryKey: ['brands'],
+    queryFn: () => brandsApi.getBrands(),
   });
 
-  const { data: subs } = useQuery({
-    queryKey: ['subscriptions'],
-    queryFn: () => api.getSubscriptions(),
-    enabled: isLoggedIn,
+  // 전체 모델 수
+  const { data: modelCount } = useQuery({
+    queryKey: ['models', 'count'],
+    queryFn: () => modelsApi.getModelCount(),
   });
 
-  const subscribedKeys = new Set(subs?.map(s => s.productKey) ?? []);
+  // 모델 목록 (커서 페이징)
+  const {
+    data: modelsData,
+    isLoading,
+    error,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+  } = useCursorPagination(
+    ['models', brandId],
+    (cursor) => modelsApi.getModels({ brandId, cursor, size: 20 }),
+  );
+
+  const allModels = modelsData?.pages.flatMap(p => p.content) ?? [];
 
   const handleRefresh = useCallback(() => {
-    queryClient.invalidateQueries({ queryKey: ['products'] });
+    queryClient.invalidateQueries({ queryKey: ['models'] });
+    queryClient.invalidateQueries({ queryKey: ['brands'] });
   }, [queryClient]);
 
-  const handleToggleSubscribe = useCallback(async (productKey: string) => {
-    try {
-      if (subscribedKeys.has(productKey)) {
-        await api.unsubscribe(productKey);
-        toast({ title: '구독 해제됨' });
-      } else {
-        await api.subscribe({ productKey, mode: 'ALL_OPTIONS', selectedOptionIds: [] });
-        toast({ title: '구독 완료' });
-      }
-      queryClient.invalidateQueries({ queryKey: ['subscriptions'] });
-    } catch {
-      toast({ title: '오류 발생', variant: 'destructive' });
-    }
-  }, [subscribedKeys, queryClient, toast]);
+  const handleBrandChange = useCallback((id: number | undefined) => {
+    setBrandId(id);
+  }, []);
 
-  const totalSoldOut = data?.items.reduce((sum, p) => sum + p.optionsSummary.soldOutCount, 0) ?? 0;
+  // 무한 스크롤: sentinel 요소가 뷰포트에 들어오면 다음 페이지 로드
+  const sentinelRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const el = sentinelRef.current;
+    if (!el) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting && hasNextPage && !isFetchingNextPage) {
+          fetchNextPage();
+        }
+      },
+      { rootMargin: '200px' },
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
 
   return (
     <div className="min-h-screen bg-background bg-noise">
       <Header onRefresh={handleRefresh} />
-      <EventsToast />
 
       {/* Hero */}
       <div className="border-b border-border bg-grid">
@@ -70,11 +83,14 @@ export default function Dashboard() {
 
       <main className="container py-6 space-y-6 relative z-10">
         <SummaryCards
-          totalProducts={data?.total ?? 0}
-          soldOutOptions={totalSoldOut}
-          updatedAt={data?.updatedAt ?? ''}
+          totalModels={modelCount ?? 0}
+          totalBrands={brands?.length ?? 0}
         />
-        <SearchFilter query={query} filter={filter} onQueryChange={setQuery} onFilterChange={setFilter} />
+        <SearchFilter
+          brands={brands ?? []}
+          selectedBrandId={brandId}
+          onBrandChange={handleBrandChange}
+        />
 
         {isLoading ? (
           <div className="flex items-center justify-center py-20">
@@ -85,22 +101,25 @@ export default function Dashboard() {
             <p className="text-destructive font-medium text-sm">데이터를 불러올 수 없습니다.</p>
           </div>
         ) : (
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
-            {data?.items.map((product, i) => (
-              <ProductCard
-                key={product.productKey}
-                product={product}
-                isSubscribed={subscribedKeys.has(product.productKey)}
-                onToggleSubscribe={handleToggleSubscribe}
-                index={i}
-              />
-            ))}
-            {data?.items.length === 0 && (
-              <div className="col-span-full py-16 text-center text-muted-foreground text-sm">
-                검색 결과가 없습니다.
-              </div>
-            )}
-          </div>
+          <>
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+              {allModels.map((model) => (
+                <ModelCard key={model.id} model={model} />
+              ))}
+              {allModels.length === 0 && (
+                <div className="col-span-full py-16 text-center text-muted-foreground text-sm">
+                  검색 결과가 없습니다.
+                </div>
+              )}
+            </div>
+
+            {/* 무한 스크롤 트리거 */}
+            <div ref={sentinelRef} className="flex justify-center py-4">
+              {isFetchingNextPage && (
+                <Loader2 className="h-5 w-5 animate-spin text-primary" />
+              )}
+            </div>
+          </>
         )}
       </main>
     </div>
