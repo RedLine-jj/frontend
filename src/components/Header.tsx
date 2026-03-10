@@ -54,7 +54,7 @@ export default function Header({ onRefresh }: HeaderProps) {
               className="h-8 text-xs"
             >
               <LogOut className="mr-1 h-3 w-3" />
-              <span className="max-w-[80px] truncate">{user?.email?.split('@')[0]}</span>
+              <span className="max-w-[80px] truncate">{user?.userId}</span>
             </Button>
           ) : (
             <Button

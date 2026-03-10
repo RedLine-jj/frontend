@@ -1,40 +1,46 @@
-import React, { createContext, useContext, useState, useCallback, ReactNode } from 'react';
+import { createContext, useContext, useState, useCallback, ReactNode } from 'react';
 import { User } from '@/types';
-import { api } from '@/api/client';
+import { authApi } from '@/api';
+import { tokenStore } from '@/api/http';
 
 interface AuthContextType {
   user: User | null;
   isLoggedIn: boolean;
-  login: (email: string, password: string) => Promise<void>;
-  signup: (email: string, password: string, name: string) => Promise<void>;
+  login: (userId: string, password: string) => Promise<void>;
+  signup: (userId: string, password: string, userName: string) => Promise<string>;
   logout: () => void;
 }
+
+const USER_KEY = 'redline_user';
 
 const AuthContext = createContext<AuthContextType | null>(null);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(() => {
-    const stored = localStorage.getItem('denim_user');
-    return stored ? JSON.parse(stored) : null;
+    const stored = localStorage.getItem(USER_KEY);
+    // 토큰이 없으면 저장된 유저 정보도 무효
+    if (!stored || !tokenStore.getAccess()) return null;
+    return JSON.parse(stored);
   });
 
-  const login = useCallback(async (email: string, password: string) => {
-    const res = await api.login(email, password);
-    const u: User = { email, token: res.accessToken };
+  const login = useCallback(async (userId: string, password: string) => {
+    const res = await authApi.login({ userId, password });
+    tokenStore.set(res.accessToken, res.refreshToken);
+    const u: User = { userId };
     setUser(u);
-    localStorage.setItem('denim_user', JSON.stringify(u));
+    localStorage.setItem(USER_KEY, JSON.stringify(u));
   }, []);
 
-  const signup = useCallback(async (email: string, password: string, name: string) => {
-    const res = await api.signup(email, password, name);
-    const u: User = { email, token: res.accessToken };
-    setUser(u);
-    localStorage.setItem('denim_user', JSON.stringify(u));
+  /** 회원가입 — 자동 로그인 안 됨. 성공 메시지 반환 */
+  const signup = useCallback(async (userId: string, password: string, userName: string): Promise<string> => {
+    await authApi.signup({ userId, password, userName });
+    return '회원가입이 완료되었습니다. 로그인해주세요.';
   }, []);
 
   const logout = useCallback(() => {
     setUser(null);
-    localStorage.removeItem('denim_user');
+    tokenStore.clear();
+    localStorage.removeItem(USER_KEY);
   }, []);
 
   return (
