@@ -83,9 +83,15 @@ export default function LoginPage() {
               >
                 {loading ? '로그인 중...' : '로그인'}
               </Button>
-              <p className="text-center text-[11px] text-muted-foreground">
-                MVP: 아무 이메일/비밀번호로 로그인 가능합니다
-              </p>
+              <div className="text-center space-y-2">
+                <Link to="/forgot-password" className="text-sm text-muted-foreground hover:text-primary transition-colors">
+                  비밀번호를 잊으셨나요?
+                </Link>
+                <p className="text-sm text-muted-foreground">
+                  계정이 없으신가요?{' '}
+                  <Link to="/signup" className="text-primary hover:underline font-medium">회원가입</Link>
+                </p>
+              </div>
             </form>
           </div>
         </motion.div>

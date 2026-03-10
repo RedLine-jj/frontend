@@ -176,6 +176,17 @@ export const api = {
     return { accessToken: `mock-token-${Date.now()}` };
   },
 
+  async signup(email: string, _password: string, _name: string): Promise<{ accessToken: string }> {
+    await delay(500);
+    if (!email) throw new Error('이메일을 입력해주세요.');
+    return { accessToken: `mock-token-${Date.now()}` };
+  },
+
+  async resetPassword(email: string): Promise<void> {
+    await delay(500);
+    if (!email) throw new Error('이메일을 입력해주세요.');
+  },
+
   async getSubscriptions(): Promise<Subscription[]> {
     await delay(300);
     return mockSubscriptions.map(s => {
