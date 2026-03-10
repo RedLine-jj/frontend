@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useRef, useEffect } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { modelsApi, brandsApi } from '@/api';
 import { useCursorPagination } from '@/hooks/useCursorPagination';
@@ -6,7 +6,6 @@ import Header from '@/components/Header';
 import SummaryCards from '@/components/SummaryCards';
 import SearchFilter from '@/components/SearchFilter';
 import ModelCard from '@/components/ModelCard';
-import { Button } from '@/components/ui/button';
 import { Loader2 } from 'lucide-react';
 
 export default function Dashboard() {
@@ -43,6 +42,23 @@ export default function Dashboard() {
   const handleBrandChange = useCallback((id: number | undefined) => {
     setBrandId(id);
   }, []);
+
+  // 무한 스크롤: sentinel 요소가 뷰포트에 들어오면 다음 페이지 로드
+  const sentinelRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const el = sentinelRef.current;
+    if (!el) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting && hasNextPage && !isFetchingNextPage) {
+          fetchNextPage();
+        }
+      },
+      { rootMargin: '200px' },
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
 
   return (
     <div className="min-h-screen bg-background bg-noise">
@@ -92,22 +108,12 @@ export default function Dashboard() {
               )}
             </div>
 
-            {hasNextPage && (
-              <div className="flex justify-center pt-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => fetchNextPage()}
-                  disabled={isFetchingNextPage}
-                  className="text-xs"
-                >
-                  {isFetchingNextPage ? (
-                    <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
-                  ) : null}
-                  더 보기
-                </Button>
-              </div>
-            )}
+            {/* 무한 스크롤 트리거 */}
+            <div ref={sentinelRef} className="flex justify-center py-4">
+              {isFetchingNextPage && (
+                <Loader2 className="h-5 w-5 animate-spin text-primary" />
+              )}
+            </div>
           </>
         )}
       </main>
