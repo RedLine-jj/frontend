@@ -31,6 +31,7 @@ export default function ModelCard({ model }: ModelCardProps) {
             No Image
           </div>
         )}
+        <p className="absolute bottom-1.5 right-2 text-[9px] text-black/60">출처: 모드맨</p>
       </div>
 
       {/* Info */}
