@@ -105,13 +105,21 @@ http.interceptors.response.use(
 
 // ── 헬퍼: API 응답에서 data만 추출 ──
 
-/** ApiResponse 래퍼를 벗기고 data만 반환. success=false면 throw */
+/** ApiResponse 래퍼를 벗기고 data만 반환. 4xx/5xx 에러에서도 API 메시지를 추출 */
 export async function unwrap<T>(promise: Promise<{ data: ApiResponse<T> }>): Promise<T> {
-  const { data: res } = await promise;
-  if (!res.success) {
-    throw new Error(res.message ?? '요청에 실패했습니다.');
+  try {
+    const { data: res } = await promise;
+    if (!res.success) {
+      throw new Error(res.message ?? '요청에 실패했습니다.');
+    }
+    return res.data;
+  } catch (error) {
+    // axios 4xx/5xx → response body에서 API 에러 메시지 추출
+    if (axios.isAxiosError(error) && error.response?.data?.message) {
+      throw new Error(error.response.data.message);
+    }
+    throw error;
   }
-  return res.data;
 }
 
 export default http;
