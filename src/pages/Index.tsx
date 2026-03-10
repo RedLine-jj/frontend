@@ -1,60 +1,52 @@
 import { useState, useCallback } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { api } from '@/api/client';
+import { modelsApi, brandsApi } from '@/api';
+import { useCursorPagination } from '@/hooks/useCursorPagination';
 import Header from '@/components/Header';
 import SummaryCards from '@/components/SummaryCards';
 import SearchFilter from '@/components/SearchFilter';
-import ProductCard from '@/components/ProductCard';
-import EventsToast from '@/components/EventsToast';
-import { useAuth } from '@/contexts/AuthContext';
-import { useToast } from '@/hooks/use-toast';
+import ModelCard from '@/components/ModelCard';
+import { Button } from '@/components/ui/button';
 import { Loader2 } from 'lucide-react';
 
 export default function Dashboard() {
-  const [query, setQuery] = useState('');
-  const [filter, setFilter] = useState('');
+  const [brandId, setBrandId] = useState<number | undefined>(undefined);
   const queryClient = useQueryClient();
-  const { isLoggedIn } = useAuth();
-  const { toast } = useToast();
 
-  const { data, isLoading, error } = useQuery({
-    queryKey: ['products', query, filter],
-    queryFn: () => api.getProducts({ query, filter }),
+  // 브랜드 목록 (필터용)
+  const { data: brands } = useQuery({
+    queryKey: ['brands'],
+    queryFn: () => brandsApi.getBrands(),
   });
 
-  const { data: subs } = useQuery({
-    queryKey: ['subscriptions'],
-    queryFn: () => api.getSubscriptions(),
-    enabled: isLoggedIn,
-  });
+  // 모델 목록 (커서 페이징)
+  const {
+    data: modelsData,
+    isLoading,
+    error,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+  } = useCursorPagination(
+    ['models', brandId],
+    (cursor) => modelsApi.getModels({ brandId, cursor, size: 20 }),
+  );
 
-  const subscribedKeys = new Set(subs?.map(s => s.productKey) ?? []);
+  const allModels = modelsData?.pages.flatMap(p => p.content) ?? [];
+  const totalModels = allModels.length;
 
   const handleRefresh = useCallback(() => {
-    queryClient.invalidateQueries({ queryKey: ['products'] });
+    queryClient.invalidateQueries({ queryKey: ['models'] });
+    queryClient.invalidateQueries({ queryKey: ['brands'] });
   }, [queryClient]);
 
-  const handleToggleSubscribe = useCallback(async (productKey: string) => {
-    try {
-      if (subscribedKeys.has(productKey)) {
-        await api.unsubscribe(productKey);
-        toast({ title: '구독 해제됨' });
-      } else {
-        await api.subscribe({ productKey, mode: 'ALL_OPTIONS', selectedOptionIds: [] });
-        toast({ title: '구독 완료' });
-      }
-      queryClient.invalidateQueries({ queryKey: ['subscriptions'] });
-    } catch {
-      toast({ title: '오류 발생', variant: 'destructive' });
-    }
-  }, [subscribedKeys, queryClient, toast]);
-
-  const totalSoldOut = data?.items.reduce((sum, p) => sum + p.optionsSummary.soldOutCount, 0) ?? 0;
+  const handleBrandChange = useCallback((id: number | undefined) => {
+    setBrandId(id);
+  }, []);
 
   return (
     <div className="min-h-screen bg-background bg-noise">
       <Header onRefresh={handleRefresh} />
-      <EventsToast />
 
       {/* Hero */}
       <div className="border-b border-border bg-grid">
@@ -70,11 +62,14 @@ export default function Dashboard() {
 
       <main className="container py-6 space-y-6 relative z-10">
         <SummaryCards
-          totalProducts={data?.total ?? 0}
-          soldOutOptions={totalSoldOut}
-          updatedAt={data?.updatedAt ?? ''}
+          totalModels={totalModels}
+          totalBrands={brands?.length ?? 0}
         />
-        <SearchFilter query={query} filter={filter} onQueryChange={setQuery} onFilterChange={setFilter} />
+        <SearchFilter
+          brands={brands ?? []}
+          selectedBrandId={brandId}
+          onBrandChange={handleBrandChange}
+        />
 
         {isLoading ? (
           <div className="flex items-center justify-center py-20">
@@ -85,22 +80,35 @@ export default function Dashboard() {
             <p className="text-destructive font-medium text-sm">데이터를 불러올 수 없습니다.</p>
           </div>
         ) : (
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
-            {data?.items.map((product, i) => (
-              <ProductCard
-                key={product.productKey}
-                product={product}
-                isSubscribed={subscribedKeys.has(product.productKey)}
-                onToggleSubscribe={handleToggleSubscribe}
-                index={i}
-              />
-            ))}
-            {data?.items.length === 0 && (
-              <div className="col-span-full py-16 text-center text-muted-foreground text-sm">
-                검색 결과가 없습니다.
+          <>
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+              {allModels.map((model, i) => (
+                <ModelCard key={model.id} model={model} index={i} />
+              ))}
+              {allModels.length === 0 && (
+                <div className="col-span-full py-16 text-center text-muted-foreground text-sm">
+                  검색 결과가 없습니다.
+                </div>
+              )}
+            </div>
+
+            {hasNextPage && (
+              <div className="flex justify-center pt-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => fetchNextPage()}
+                  disabled={isFetchingNextPage}
+                  className="text-xs"
+                >
+                  {isFetchingNextPage ? (
+                    <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
+                  ) : null}
+                  더 보기
+                </Button>
               </div>
             )}
-          </div>
+          </>
         )}
       </main>
     </div>
