@@ -5,26 +5,31 @@ import Header from '@/components/Header';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Radar } from 'lucide-react';
+import { UserPlus } from 'lucide-react';
 import { motion } from 'framer-motion';
 
-export default function LoginPage() {
+export default function SignupPage() {
+  const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const { login } = useAuth();
+  const { signup } = useAuth();
   const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+    if (password.length < 4) {
+      setError('비밀번호는 4자 이상이어야 합니다.');
+      return;
+    }
     setLoading(true);
     try {
-      await login(email, password);
+      await signup(email, password, name);
       navigate('/');
     } catch (err: any) {
-      setError(err.message || '로그인에 실패했습니다.');
+      setError(err.message || '회원가입에 실패했습니다.');
     } finally {
       setLoading(false);
     }
@@ -43,14 +48,26 @@ export default function LoginPage() {
           <div className="glass-card glow-border rounded-2xl p-8 space-y-6">
             <div className="text-center space-y-3">
               <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-xl bg-primary shadow-lg shadow-primary/30 animate-pulse-glow">
-                <Radar className="h-7 w-7 text-primary-foreground" />
+                <UserPlus className="h-7 w-7 text-primary-foreground" />
               </div>
               <div>
-                <h1 className="text-xl font-bold font-display text-gradient">로그인</h1>
+                <h1 className="text-xl font-bold font-display text-gradient">회원가입</h1>
                 <p className="text-sm text-muted-foreground mt-1">DENIM Restock Radar</p>
               </div>
             </div>
             <form onSubmit={handleSubmit} className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="name" className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">이름</Label>
+                <Input
+                  id="name"
+                  type="text"
+                  placeholder="홍길동"
+                  value={name}
+                  onChange={e => setName(e.target.value)}
+                  required
+                  className="h-11 bg-secondary/50 border-border/60 focus:border-primary/50 focus:ring-primary/20"
+                />
+              </div>
               <div className="space-y-2">
                 <Label htmlFor="email" className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">이메일</Label>
                 <Input
@@ -76,22 +93,17 @@ export default function LoginPage() {
                 />
               </div>
               {error && <p className="text-sm text-destructive">{error}</p>}
-              <Button 
-                type="submit" 
-                className="w-full h-11 bg-primary text-primary-foreground hover:bg-primary/90 font-bold shadow-lg shadow-primary/25" 
+              <Button
+                type="submit"
+                className="w-full h-11 bg-primary text-primary-foreground hover:bg-primary/90 font-bold shadow-lg shadow-primary/25"
                 disabled={loading}
               >
-                {loading ? '로그인 중...' : '로그인'}
+                {loading ? '가입 중...' : '회원가입'}
               </Button>
-              <div className="text-center space-y-2">
-                <Link to="/forgot-password" className="text-sm text-muted-foreground hover:text-primary transition-colors">
-                  비밀번호를 잊으셨나요?
-                </Link>
-                <p className="text-sm text-muted-foreground">
-                  계정이 없으신가요?{' '}
-                  <Link to="/signup" className="text-primary hover:underline font-medium">회원가입</Link>
-                </p>
-              </div>
+              <p className="text-center text-sm text-muted-foreground">
+                이미 계정이 있으신가요?{' '}
+                <Link to="/login" className="text-primary hover:underline font-medium">로그인</Link>
+              </p>
             </form>
           </div>
         </motion.div>

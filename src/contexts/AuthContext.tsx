@@ -6,6 +6,7 @@ interface AuthContextType {
   user: User | null;
   isLoggedIn: boolean;
   login: (email: string, password: string) => Promise<void>;
+  signup: (email: string, password: string, name: string) => Promise<void>;
   logout: () => void;
 }
 
@@ -24,13 +25,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     localStorage.setItem('denim_user', JSON.stringify(u));
   }, []);
 
+  const signup = useCallback(async (email: string, password: string, name: string) => {
+    const res = await api.signup(email, password, name);
+    const u: User = { email, token: res.accessToken };
+    setUser(u);
+    localStorage.setItem('denim_user', JSON.stringify(u));
+  }, []);
+
   const logout = useCallback(() => {
     setUser(null);
     localStorage.removeItem('denim_user');
   }, []);
 
   return (
-    <AuthContext.Provider value={{ user, isLoggedIn: !!user, login, logout }}>
+    <AuthContext.Provider value={{ user, isLoggedIn: !!user, login, signup, logout }}>
       {children}
     </AuthContext.Provider>
   );
