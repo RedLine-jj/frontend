@@ -1,4 +1,3 @@
-import { Button } from '@/components/ui/button';
 import { Filter } from 'lucide-react';
 import type { BrandDto } from '@/types/api';
 
@@ -8,38 +7,63 @@ interface SearchFilterProps {
   onBrandChange: (brandId: number | undefined) => void;
 }
 
+const chipBase = [
+  'inline-flex items-center text-xs font-medium h-8 px-4 rounded-full',
+  'whitespace-nowrap transition-all duration-200 ease-out cursor-pointer',
+  'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1',
+].join(' ');
+
+const chipSelected = [
+  'bg-primary text-primary-foreground',
+  'shadow-[0_2px_8px_hsl(216_72%_45%/0.3)]',
+  'scale-[1.03]',
+].join(' ');
+
+const chipUnselected = [
+  'bg-transparent text-muted-foreground',
+  'border border-border/60',
+  'hover:border-primary/40 hover:text-primary hover:bg-primary/5',
+].join(' ');
+
 export default function SearchFilter({ brands, selectedBrandId, onBrandChange }: SearchFilterProps) {
   return (
-    <div className="flex items-center gap-2 overflow-x-auto pb-1">
-      <Filter className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-      <div className="flex gap-1 rounded-lg bg-secondary p-1">
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => onBrandChange(undefined)}
-          className={`text-xs h-7 px-3 rounded-md transition-all whitespace-nowrap ${
-            selectedBrandId === undefined
-              ? 'bg-primary text-primary-foreground shadow-sm'
-              : 'text-muted-foreground hover:text-foreground'
-          }`}
-        >
-          전체
-        </Button>
-        {brands.map(brand => (
-          <Button
-            key={brand.id}
-            variant="ghost"
-            size="sm"
-            onClick={() => onBrandChange(brand.id)}
-            className={`text-xs h-7 px-3 rounded-md transition-all whitespace-nowrap ${
-              selectedBrandId === brand.id
-                ? 'bg-primary text-primary-foreground shadow-sm'
-                : 'text-muted-foreground hover:text-foreground'
-            }`}
+    <div className="glass-card rounded-xl p-3">
+      <div className="flex items-center gap-3">
+        {/* Filter icon badge */}
+        <div className="flex-shrink-0 flex items-center justify-center w-8 h-8 rounded-lg bg-primary/10">
+          <Filter className="h-4 w-4 text-primary" />
+        </div>
+
+        {/* Scrollable chip row — scrollbar hidden via inline styles + webkit pseudo */}
+        <div className="relative flex-1 overflow-hidden">
+          <style>{`.chip-scroll::-webkit-scrollbar{display:none}`}</style>
+          <div
+            className="chip-scroll flex gap-2 overflow-x-auto py-0.5 pr-2"
+            style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
           >
-            {brand.brandNameKo || brand.brandName}
-          </Button>
-        ))}
+            {/* "All" chip */}
+            <button
+              onClick={() => onBrandChange(undefined)}
+              className={`${chipBase} ${selectedBrandId === undefined ? chipSelected : chipUnselected}`}
+            >
+              전체
+            </button>
+
+            {/* Brand chips */}
+            {brands.map(brand => (
+              <button
+                key={brand.id}
+                onClick={() => onBrandChange(brand.id)}
+                className={`${chipBase} ${selectedBrandId === brand.id ? chipSelected : chipUnselected}`}
+              >
+                {brand.brandNameKo || brand.brandName}
+              </button>
+            ))}
+          </div>
+
+          {/* Right fade hint for scroll overflow */}
+          <div className="pointer-events-none absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-[hsl(var(--card))] to-transparent" />
+        </div>
       </div>
     </div>
   );
