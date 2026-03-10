@@ -25,6 +25,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     localStorage.setItem('denim_user', JSON.stringify(u));
   }, []);
 
+  const signup = useCallback(async (email: string, password: string, name: string) => {
+    const res = await api.signup(email, password, name);
+    const u: User = { email, token: res.accessToken };
+    setUser(u);
+    localStorage.setItem('denim_user', JSON.stringify(u));
+  }, []);
+
   const logout = useCallback(() => {
     setUser(null);
     localStorage.removeItem('denim_user');
