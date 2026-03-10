@@ -9,20 +9,22 @@ const http = axios.create({
   timeout: 15_000,
 });
 
-// ── 토큰 관리 (AuthContext 밖에서도 접근 가능하도록) ──
+// ── 토큰 관리 ──
+// accessToken: 메모리에만 보관 (XSS 방어)
+// refreshToken: localStorage (새로고침 후 accessToken 재발급용)
 
-const TOKEN_KEY = 'redline_access_token';
 const REFRESH_KEY = 'redline_refresh_token';
+let accessToken: string | null = null;
 
 export const tokenStore = {
-  getAccess: () => localStorage.getItem(TOKEN_KEY),
+  getAccess: () => accessToken,
   getRefresh: () => localStorage.getItem(REFRESH_KEY),
   set(access: string, refresh: string) {
-    localStorage.setItem(TOKEN_KEY, access);
+    accessToken = access;
     localStorage.setItem(REFRESH_KEY, refresh);
   },
   clear() {
-    localStorage.removeItem(TOKEN_KEY);
+    accessToken = null;
     localStorage.removeItem(REFRESH_KEY);
   },
 };

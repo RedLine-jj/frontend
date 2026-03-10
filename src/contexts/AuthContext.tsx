@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useCallback, ReactNode } from 'react';
+import { createContext, useContext, useState, useCallback, useEffect, ReactNode } from 'react';
 import { User } from '@/types';
 import { authApi } from '@/api';
 import { tokenStore } from '@/api/http';
@@ -6,6 +6,7 @@ import { tokenStore } from '@/api/http';
 interface AuthContextType {
   user: User | null;
   isLoggedIn: boolean;
+  isInitialized: boolean;
   login: (userId: string, password: string) => Promise<void>;
   signup: (userId: string, password: string, userName: string) => Promise<string>;
   logout: () => void;
@@ -18,10 +19,46 @@ const AuthContext = createContext<AuthContextType | null>(null);
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(() => {
     const stored = localStorage.getItem(USER_KEY);
-    // 토큰이 없으면 저장된 유저 정보도 무효
-    if (!stored || !tokenStore.getAccess()) return null;
-    return JSON.parse(stored);
+    return stored ? JSON.parse(stored) : null;
   });
+  const [isInitialized, setIsInitialized] = useState(false);
+
+  // 새로고침 시: refreshToken이 있으면 accessToken 재발급 시도
+  useEffect(() => {
+    const restore = async () => {
+      const refreshToken = tokenStore.getRefresh();
+      if (!user || !refreshToken) {
+        // refreshToken 없으면 유저 정보도 정리
+        if (!refreshToken && user) {
+          setUser(null);
+          localStorage.removeItem(USER_KEY);
+        }
+        setIsInitialized(true);
+        return;
+      }
+      try {
+        // 인터셉터의 refresh 로직과 동일한 엔드포인트
+        const { default: axios } = await import('axios');
+        const { data } = await axios.post(
+          `${import.meta.env.VITE_API_URL}/api/auth/refresh`,
+          { refreshToken },
+        );
+        if (data.success && data.data) {
+          tokenStore.set(data.data.accessToken, data.data.refreshToken);
+        } else {
+          throw new Error();
+        }
+      } catch {
+        // refresh 실패 → 로그아웃 상태
+        setUser(null);
+        tokenStore.clear();
+        localStorage.removeItem(USER_KEY);
+      } finally {
+        setIsInitialized(true);
+      }
+    };
+    restore();
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const login = useCallback(async (userId: string, password: string) => {
     const res = await authApi.login({ userId, password });
@@ -44,7 +81,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   return (
-    <AuthContext.Provider value={{ user, isLoggedIn: !!user, login, signup, logout }}>
+    <AuthContext.Provider value={{ user, isLoggedIn: !!user, isInitialized, login, signup, logout }}>
       {children}
     </AuthContext.Provider>
   );
