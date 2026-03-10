@@ -8,8 +8,9 @@ import type {
 
 /** GET /api/models — 커서 페이징 */
 export function getModels(params?: ModelsParams) {
-  // brandIds 배열을 콤마로 구분된 문자열로 변환
   const requestParams = { ...params };
+
+  // brandIds 배열을 콤마로 구분된 문자열로 변환
   if (requestParams.brandIds && requestParams.brandIds.length > 0) {
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore
@@ -18,7 +19,18 @@ export function getModels(params?: ModelsParams) {
     delete requestParams.brandIds;
   }
 
-  return unwrap<CursorPage<ModelDto>>(http.get("/api/models", { params: requestParams }));
+  // types 배열을 콤마로 구분된 문자열로 변환
+  if (requestParams.types && requestParams.types.length > 0) {
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore
+    requestParams.types = requestParams.types.join(",");
+  } else {
+    delete requestParams.types;
+  }
+
+  return unwrap<CursorPage<ModelDto>>(
+    http.get("/api/models", { params: requestParams }),
+  );
 }
 
 /** GET /api/models/types */

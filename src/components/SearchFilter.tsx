@@ -6,30 +6,37 @@ import {
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
 import { Separator } from "@/components/ui/separator";
-import type { BrandDto } from "@/types/api";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Badge } from "@/components/ui/badge";
+import type { BrandDto, ModelTypeDto } from "@/types/api";
 
+// --- PROPS ---
 interface SearchFilterProps {
   brands: BrandDto[];
   selectedBrandIds: number[];
   onBrandToggle: (brandId: number) => void;
   onClearBrands: () => void;
+  modelTypes: ModelTypeDto[];
+  selectedTypes: string[];
+  onTypeToggle: (typeCode: string) => void;
+  onClearTypes: () => void;
 }
 
+// --- STYLES ---
 const chipBase =
-  "inline-flex items-center text-xs font-medium h-8 px-4 rounded-full whitespace-nowrap transition-all duration-200 ease-out cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1";
-
+  "inline-flex items-center text-xs font-medium h-7 px-3 rounded-full whitespace-nowrap transition-all duration-200 ease-out cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1";
 const chipSelected =
-  "bg-primary text-primary-foreground shadow-[0_2px_8px_hsl(216_72%_45%/0.3)] scale-[1.03]";
-
+  "bg-primary text-primary-foreground shadow-sm scale-[1.02]";
 const chipUnselected =
-  "bg-transparent text-muted-foreground border border-border/60 hover:border-primary/40 hover:text-primary hover:bg-primary/5";
+  "bg-background text-muted-foreground border border-border/80 hover:border-primary/60 hover:text-primary hover:bg-primary/5";
 
-function BrandChip({
-  brand,
+// --- SUB-COMPONENTS ---
+function ChipButton({
+  label,
   isSelected,
   onClick,
 }: {
-  brand: BrandDto;
+  label: string;
   isSelected: boolean;
   onClick: () => void;
 }) {
@@ -38,30 +45,55 @@ function BrandChip({
       onClick={onClick}
       className={`${chipBase} ${isSelected ? chipSelected : chipUnselected}`}
     >
-      {brand.brandNameKo || brand.brandName}
+      {label}
     </button>
   );
 }
 
+function FilterTabPanel({ children }: { children: React.ReactNode }) {
+  return <div className="pt-4 space-y-3">{children}</div>;
+}
+
+function ChipGroup({ children }: { children: React.ReactNode }) {
+  return <div className="flex flex-wrap gap-2">{children}</div>;
+}
+
+// --- MAIN COMPONENT ---
 export default function SearchFilter({
   brands,
   selectedBrandIds,
   onBrandToggle,
   onClearBrands,
+  modelTypes,
+  selectedTypes,
+  onTypeToggle,
+  onClearTypes,
 }: SearchFilterProps) {
   const { selectedBrands, unselectedBrands } = useMemo(() => {
     const selected = new Set(selectedBrandIds);
     const selectedBrands: BrandDto[] = [];
     const unselectedBrands: BrandDto[] = [];
-    brands.forEach((brand) => {
-      if (selected.has(brand.id)) {
-        selectedBrands.push(brand);
-      } else {
-        unselectedBrands.push(brand);
-      }
-    });
+    brands.forEach((brand) =>
+      selected.has(brand.id)
+        ? selectedBrands.push(brand)
+        : unselectedBrands.push(brand),
+    );
     return { selectedBrands, unselectedBrands };
   }, [brands, selectedBrandIds]);
+
+  const { selectedModelTypes, unselectedModelTypes } = useMemo(() => {
+    const selected = new Set(selectedTypes);
+    const selectedModelTypes: ModelTypeDto[] = [];
+    const unselectedModelTypes: ModelTypeDto[] = [];
+    modelTypes.forEach((type) =>
+      selected.has(type.code)
+        ? selectedModelTypes.push(type)
+        : unselectedModelTypes.push(type),
+    );
+    return { selectedModelTypes, unselectedModelTypes };
+  }, [modelTypes, selectedTypes]);
+
+  const totalFilters = selectedBrandIds.length + selectedTypes.length;
 
   return (
     <Collapsible className="glass-card rounded-xl">
@@ -72,11 +104,11 @@ export default function SearchFilter({
               <Filter className="h-4 w-4 text-primary" />
             </div>
             <div className="text-left">
-              <h3 className="text-sm font-semibold">브랜드 필터</h3>
+              <h3 className="text-sm font-semibold">필터</h3>
               <p className="text-xs text-muted-foreground mt-0.5">
-                {selectedBrandIds.length === 0
-                  ? "전체 브랜드"
-                  : `${selectedBrandIds.length}개 브랜드 선택됨`}
+                {totalFilters === 0
+                  ? "전체"
+                  : `${totalFilters}개 필터 적용됨`}
               </p>
             </div>
           </div>
@@ -85,41 +117,52 @@ export default function SearchFilter({
       </div>
 
       <CollapsibleContent className="data-[state=open]:animate-collapsible-down data-[state=closed]:animate-collapsible-up overflow-hidden">
-        <div className="px-4 pb-4 space-y-4">
-          <div className="flex flex-wrap gap-2">
-            <button
-              onClick={onClearBrands}
-              className={`${chipBase} ${
-                selectedBrandIds.length === 0 ? chipSelected : chipUnselected
-              }`}
-            >
-              전체
-            </button>
-            {selectedBrands.map((brand) => (
-              <BrandChip
-                key={brand.id}
-                brand={brand}
-                isSelected
-                onClick={() => onBrandToggle(brand.id)}
-              />
-            ))}
-          </div>
+        <Tabs defaultValue="brands" className="px-4 pb-4">
+          <TabsList className="grid w-full grid-cols-2 h-9">
+            <TabsTrigger value="brands">
+              브랜드
+              {selectedBrandIds.length > 0 && <Badge className="ml-2 h-4 px-1.5 text-[10px]">{selectedBrandIds.length}</Badge>}
+            </TabsTrigger>
+            <TabsTrigger value="types">
+              상품 타입
+              {selectedTypes.length > 0 && <Badge className="ml-2 h-4 px-1.5 text-[10px]">{selectedTypes.length}</Badge>}
+            </TabsTrigger>
+          </TabsList>
+          
+          <TabsContent value="brands">
+            <FilterTabPanel>
+              <ChipGroup>
+                <ChipButton label="전체" isSelected={selectedBrandIds.length === 0} onClick={onClearBrands} />
+                {selectedBrands.map((brand) => (
+                  <ChipButton key={brand.id} label={brand.brandNameKo || brand.brandName} isSelected onClick={() => onBrandToggle(brand.id)} />
+                ))}
+              </ChipGroup>
+              {selectedBrands.length > 0 && unselectedBrands.length > 0 && <Separator />}
+              <ChipGroup>
+                {unselectedBrands.map((brand) => (
+                  <ChipButton key={brand.id} label={brand.brandNameKo || brand.brandName} isSelected={false} onClick={() => onBrandToggle(brand.id)} />
+                ))}
+              </ChipGroup>
+            </FilterTabPanel>
+          </TabsContent>
 
-          {selectedBrands.length > 0 && unselectedBrands.length > 0 && (
-            <Separator />
-          )}
-
-          <div className="flex flex-wrap gap-2">
-            {unselectedBrands.map((brand) => (
-              <BrandChip
-                key={brand.id}
-                brand={brand}
-                isSelected={false}
-                onClick={() => onBrandToggle(brand.id)}
-              />
-            ))}
-          </div>
-        </div>
+          <TabsContent value="types">
+            <FilterTabPanel>
+              <ChipGroup>
+                <ChipButton label="전체" isSelected={selectedTypes.length === 0} onClick={onClearTypes} />
+                {selectedModelTypes.map((type) => (
+                  <ChipButton key={type.code} label={type.label} isSelected onClick={() => onTypeToggle(type.code)} />
+                ))}
+              </ChipGroup>
+              {selectedModelTypes.length > 0 && unselectedModelTypes.length > 0 && <Separator />}
+              <ChipGroup>
+                {unselectedModelTypes.map((type) => (
+                  <ChipButton key={type.code} label={type.label} isSelected={false} onClick={() => onTypeToggle(type.code)} />
+                ))}
+              </ChipGroup>
+            </FilterTabPanel>
+          </TabsContent>
+        </Tabs>
       </CollapsibleContent>
     </Collapsible>
   );

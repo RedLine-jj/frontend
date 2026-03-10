@@ -9,26 +9,32 @@ import ModelGrid from "@/components/ModelGrid";
 
 export default function Dashboard() {
   const [brandIds, setBrandIds] = useState<number[]>([]);
+  const [types, setTypes] = useState<string[]>([]);
   const queryClient = useQueryClient();
 
-  // 브랜드 목록 (필터용)
+  // --- API 데이터 조회 ---
   const { data: brands } = useQuery({
     queryKey: ["brands"],
     queryFn: () => brandsApi.getBrands(),
-    staleTime: 1000 * 60 * 5, // 5분간 캐시 유지
+    staleTime: 1000 * 60 * 5,
   });
 
-  // 전체 모델 수
+  const { data: modelTypes } = useQuery({
+    queryKey: ["modelTypes"],
+    queryFn: () => modelsApi.getModelTypes(),
+    staleTime: Infinity, // 앱 전체에서 거의 변하지 않는 데이터
+  });
+
   const { data: modelCount } = useQuery({
     queryKey: ["models", "count"],
     queryFn: () => modelsApi.getModelCount(),
-    staleTime: 1000 * 60, // 1분간 캐시 유지
+    staleTime: 1000 * 60,
   });
 
-  // 안정적인 쿼리 키를 위해 ID를 정렬하고 문자열로 변환
+  // --- 필터링된 모델 목록 조회 ---
   const brandQueryKey = useMemo(() => brandIds.sort().join(","), [brandIds]);
+  const typeQueryKey = useMemo(() => types.sort().join(","), [types]);
 
-  // 모델 목록 (커서 페이징)
   const {
     data: modelsData,
     isLoading,
@@ -36,19 +42,20 @@ export default function Dashboard() {
     fetchNextPage,
     hasNextPage,
     isFetchingNextPage,
-  } = useCursorPagination(["models", brandQueryKey], (cursor) =>
-    modelsApi.getModels({ brandIds, cursor, size: 20 }),
+  } = useCursorPagination(["models", brandQueryKey, typeQueryKey], (cursor) =>
+    modelsApi.getModels({ brandIds, types, cursor, size: 20 }),
   );
 
-  // useMemo를 사용해 페이지 데이터가 변경될 때만 allModels 배열을 새로 계산
   const allModels = useMemo(
     () => modelsData?.pages.flatMap((p) => p.content) ?? [],
     [modelsData],
   );
 
+  // --- 이벤트 핸들러 ---
   const handleRefresh = useCallback(() => {
     queryClient.invalidateQueries({ queryKey: ["models"] });
     queryClient.invalidateQueries({ queryKey: ["brands"] });
+    queryClient.invalidateQueries({ queryKey: ["modelTypes"] });
   }, [queryClient]);
 
   const handleBrandToggle = useCallback((brandId: number) => {
@@ -59,9 +66,17 @@ export default function Dashboard() {
     );
   }, []);
 
-  const handleClearBrands = useCallback(() => {
-    setBrandIds([]);
+  const handleClearBrands = useCallback(() => setBrandIds([]), []);
+
+  const handleTypeToggle = useCallback((typeCode: string) => {
+    setTypes((prev) =>
+      prev.includes(typeCode)
+        ? prev.filter((c) => c !== typeCode)
+        : [...prev, typeCode],
+    );
   }, []);
+
+  const handleClearTypes = useCallback(() => setTypes([]), []);
 
   return (
     <div className="min-h-screen bg-background bg-noise">
@@ -77,6 +92,10 @@ export default function Dashboard() {
           selectedBrandIds={brandIds}
           onBrandToggle={handleBrandToggle}
           onClearBrands={handleClearBrands}
+          modelTypes={modelTypes ?? []}
+          selectedTypes={types}
+          onTypeToggle={handleTypeToggle}
+          onClearTypes={handleClearTypes}
         />
 
         <ModelGrid
