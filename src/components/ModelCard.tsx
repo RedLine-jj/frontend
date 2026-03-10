@@ -5,17 +5,16 @@ import type { ModelDto } from '@/types/api';
 
 interface ModelCardProps {
   model: ModelDto;
-  index?: number;
 }
 
-export default function ModelCard({ model, index = 0 }: ModelCardProps) {
+export default function ModelCard({ model }: ModelCardProps) {
   const navigate = useNavigate();
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 16 }}
+      initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: index * 0.04, duration: 0.35 }}
+      transition={{ duration: 0.3 }}
       className="group glass-card rounded-xl overflow-hidden cursor-pointer"
       onClick={() => navigate(`/model/${model.id}`)}
     >

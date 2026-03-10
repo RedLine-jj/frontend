@@ -98,8 +98,8 @@ export default function Dashboard() {
         ) : (
           <>
             <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
-              {allModels.map((model, i) => (
-                <ModelCard key={model.id} model={model} index={i} />
+              {allModels.map((model) => (
+                <ModelCard key={model.id} model={model} />
               ))}
               {allModels.length === 0 && (
                 <div className="col-span-full py-16 text-center text-muted-foreground text-sm">
