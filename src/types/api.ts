@@ -64,6 +64,7 @@ export interface ModelDto {
   modelName: string;
   imageUrl: string;
   type: string;
+  lowestPrice: number | null;
 }
 
 export interface ModelTypeDto {

@@ -1,5 +1,4 @@
 import { useNavigate } from 'react-router-dom';
-import { Badge } from '@/components/ui/badge';
 import { motion } from 'framer-motion';
 import type { ModelDto } from '@/types/api';
 
@@ -12,13 +11,14 @@ export default function ModelCard({ model }: ModelCardProps) {
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 12 }}
+      initial={{ opacity: 0, y: 16 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.3 }}
+      transition={{ duration: 0.35 }}
       className="group glass-card rounded-xl overflow-hidden cursor-pointer"
       onClick={() => navigate(`/model/${model.id}`)}
     >
-      <div className="relative aspect-[4/5] overflow-hidden bg-secondary">
+      {/* Large image */}
+      <div className="relative aspect-[4/5] overflow-hidden">
         {model.imageUrl ? (
           <img
             src={model.imageUrl}
@@ -27,12 +27,13 @@ export default function ModelCard({ model }: ModelCardProps) {
             loading="lazy"
           />
         ) : (
-          <div className="h-full w-full flex items-center justify-center text-muted-foreground text-xs">
+          <div className="h-full w-full flex items-center justify-center text-muted-foreground text-xs bg-secondary">
             No Image
           </div>
         )}
       </div>
 
+      {/* Info */}
       <div className="p-4 space-y-2">
         <p className="text-[10px] font-semibold tracking-[0.15em] uppercase text-primary">
           {model.brandNameKo || model.brandName}
@@ -40,9 +41,16 @@ export default function ModelCard({ model }: ModelCardProps) {
         <h3 className="text-sm font-semibold font-display leading-snug text-foreground line-clamp-1">
           {model.modelName}
         </h3>
-        <Badge variant="outline" className="text-[10px] px-1.5 py-0 text-muted-foreground">
-          {model.type}
-        </Badge>
+
+        <div className="flex items-center justify-between">
+          {model.lowestPrice != null ? (
+            <p className="text-base font-bold font-display text-foreground">
+              ₩{model.lowestPrice.toLocaleString()}
+            </p>
+          ) : (
+            <p className="text-xs text-muted-foreground">가격 정보 없음</p>
+          )}
+        </div>
       </div>
     </motion.div>
   );
