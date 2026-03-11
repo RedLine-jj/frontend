@@ -156,3 +156,28 @@ export interface PriceComparisonDto {
 export interface PriceComparisonParams {
   modelId: number;
 }
+
+// ── Price History ──
+
+export interface DailyPriceDto {
+  date: string;
+  price: number;
+}
+
+export interface SitePriceHistoryDto {
+  siteName: string;
+  currentPrice: number | null;
+  priceChange: number | null;
+  minPrice: number | null;
+  maxPrice: number | null;
+  history: DailyPriceDto[];
+}
+
+export interface PriceHistoryDto {
+  sites: SitePriceHistoryDto[];
+}
+
+export interface PriceHistoryParams {
+  modelId: number;
+  days?: number;
+}
