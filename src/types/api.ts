@@ -135,10 +135,22 @@ export interface SubscribeRequest {
 
 // ── Dashboard ──
 
+export interface OptionPriceItemDto {
+  optionLabel: string;
+  price: number;
+  status: boolean;
+  url: string;
+}
+
+export interface SiteComparisonItemDto {
+  siteName: string;
+  options: OptionPriceItemDto[];
+}
+
 export interface PriceComparisonDto {
   modelName: string;
   imageUrl: string;
-  sites: unknown[]; // API가 껍데기라 상세 타입 미정
+  sites: SiteComparisonItemDto[];
 }
 
 export interface PriceComparisonParams {

@@ -1,6 +1,6 @@
 import { useParams, Link } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { modelsApi, siteOptionsApi, subscriptionsApi } from '@/api';
+import { modelsApi, dashboardApi, subscriptionsApi } from '@/api';
 import Header from '@/components/Header';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -22,9 +22,9 @@ export default function ModelDetailPage() {
     enabled: !!modelId && !isNaN(modelIdNum),
   });
 
-  const { data: siteOptions } = useQuery({
-    queryKey: ['siteOptions', modelIdNum],
-    queryFn: () => siteOptionsApi.getSiteOptions({ modelId: modelIdNum }),
+  const { data: priceComparison } = useQuery({
+    queryKey: ['priceComparison', modelIdNum],
+    queryFn: () => dashboardApi.getPriceComparison({ modelId: modelIdNum }),
     enabled: !!modelId && !isNaN(modelIdNum),
   });
 
@@ -81,7 +81,7 @@ export default function ModelDetailPage() {
     );
   }
 
-  const options = siteOptions?.content ?? [];
+  const sites = priceComparison?.sites ?? [];
 
   return (
     <div className="min-h-screen bg-background bg-noise">
@@ -130,34 +130,43 @@ export default function ModelDetailPage() {
             </div>
 
             {/* 사이트별 옵션 */}
-            {options.length > 0 && (
-              <div className="glass-card rounded-xl overflow-hidden">
-                <table className="w-full text-sm">
-                  <thead>
-                    <tr className="border-b border-border text-muted-foreground text-xs">
-                      <th className="text-left p-3 font-medium">편집샵</th>
-                      <th className="text-left p-3 font-medium">옵션</th>
-                      <th className="text-right p-3 font-medium">가격</th>
-                      <th className="text-center p-3 font-medium">상태</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {options.map((opt) => (
-                      <tr key={opt.id} className="border-b border-border/50 last:border-0">
-                        <td className="p-3 font-medium">{opt.siteName}</td>
-                        <td className="p-3 text-muted-foreground">{opt.optionLabel}</td>
-                        <td className="p-3 text-right font-display font-semibold">
-                          ₩{opt.price.toLocaleString()}
-                        </td>
-                        <td className="p-3 text-center">
-                          <Badge variant="outline" className={opt.status ? 'status-available' : 'status-soldout'}>
-                            {opt.status ? '재고' : '품절'}
-                          </Badge>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+            {sites.length > 0 && (
+              <div className="space-y-3">
+                {sites.map((site) => (
+                  <div key={site.siteName} className="glass-card rounded-xl overflow-hidden">
+                    <div className="px-3 py-2 border-b border-border bg-secondary/30">
+                      <span className="text-xs font-semibold tracking-wide uppercase text-primary">{site.siteName}</span>
+                    </div>
+                    <table className="w-full text-sm">
+                      <thead>
+                        <tr className="border-b border-border text-muted-foreground text-xs">
+                          <th className="text-left p-3 font-medium">옵션</th>
+                          <th className="text-right p-3 font-medium">가격</th>
+                          <th className="text-center p-3 font-medium">상태</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {site.options.map((opt, idx) => (
+                          <tr key={idx} className="border-b border-border/50 last:border-0">
+                            <td className="p-3 text-muted-foreground">
+                              {opt.url ? (
+                                <a href={opt.url} target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors underline-offset-2 hover:underline">{opt.optionLabel}</a>
+                              ) : opt.optionLabel}
+                            </td>
+                            <td className="p-3 text-right font-display font-semibold">
+                              {opt.price != null ? `₩${opt.price.toLocaleString()}` : '—'}
+                            </td>
+                            <td className="p-3 text-center">
+                              <Badge variant="outline" className={opt.status ? 'status-available' : 'status-soldout'}>
+                                {opt.status ? '재고' : '품절'}
+                              </Badge>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                ))}
               </div>
             )}
 

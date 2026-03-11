@@ -1,9 +1,10 @@
-import { useState, useCallback, useMemo } from "react";
+import { useCallback, useMemo } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { modelsApi, brandsApi, subscriptionsApi } from "@/api";
 import { useAuth } from "@/contexts/AuthContext";
 import { useCursorPagination } from "@/hooks/useCursorPagination";
 import { useToast } from "@/hooks/use-toast";
+import { useSearchParams } from "react-router-dom";
 import Header from "@/components/Header";
 import SummaryCards from "@/components/SummaryCards";
 import SearchFilter from "@/components/SearchFilter";
@@ -11,11 +12,23 @@ import ModelGrid from "@/components/ModelGrid";
 import ScrollToTopButton from "@/components/ui/ScrollToTopButton";
 
 export default function Dashboard() {
-  const [brandIds, setBrandIds] = useState<number[]>([]);
-  const [types, setTypes] = useState<string[]>([]);
+  const [searchParams, setSearchParams] = useSearchParams();
   const { isLoggedIn } = useAuth();
   const queryClient = useQueryClient();
-  const { toast } = useToast();
+ const { toast } = useToast();
+
+  const brandIds = useMemo(() => {
+    const raw = searchParams.get("brandIds");
+    if (!raw) return [] as number[];
+    return raw.split(",").map(Number).filter((n) => !isNaN(n));
+  }, [searchParams]);
+
+  const types = useMemo(() => {
+    const raw = searchParams.get("types");
+    if (!raw) return [] as string[];
+    return raw.split(",").filter(Boolean);
+  }, [searchParams]);
+
 
   // --- API 데이터 조회 ---
   const { data: brands } = useQuery({
@@ -101,25 +114,35 @@ export default function Dashboard() {
     queryClient.invalidateQueries({ queryKey: ["modelTypes"] });
   }, [queryClient]);
 
-  const handleBrandToggle = useCallback((brandId: number) => {
-    setBrandIds((prev) =>
-      prev.includes(brandId)
-        ? prev.filter((id) => id !== brandId)
-        : [...prev, brandId],
-    );
-  }, []);
+  const updateParams = useCallback((key: string, value: string | null) => {
+    setSearchParams((prev) => {
+      const next = new URLSearchParams(prev);
+      if (value) {
+        next.set(key, value);
+      } else {
+        next.delete(key);
+      }
+      return next;
+    });
+  }, [setSearchParams]);
 
-  const handleClearBrands = useCallback(() => setBrandIds([]), []);
+  const handleBrandToggle = useCallback((brandId: number) => {
+    const next = brandIds.includes(brandId)
+      ? brandIds.filter((id) => id !== brandId)
+      : [...brandIds, brandId];
+    updateParams("brandIds", next.length > 0 ? next.join(",") : null);
+  }, [brandIds, updateParams]);
+
+  const handleClearBrands = useCallback(() => updateParams("brandIds", null), [updateParams]);
 
   const handleTypeToggle = useCallback((typeCode: string) => {
-    setTypes((prev) =>
-      prev.includes(typeCode)
-        ? prev.filter((c) => c !== typeCode)
-        : [...prev, typeCode],
-    );
-  }, []);
+    const next = types.includes(typeCode)
+      ? types.filter((c) => c !== typeCode)
+      : [...types, typeCode];
+    updateParams("types", next.length > 0 ? next.join(",") : null);
+  }, [types, updateParams]);
 
-  const handleClearTypes = useCallback(() => setTypes([]), []);
+  const handleClearTypes = useCallback(() => updateParams("types", null), [updateParams]);
 
   return (
     <div className="min-h-screen bg-background bg-noise">
