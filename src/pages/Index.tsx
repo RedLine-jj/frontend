@@ -5,8 +5,10 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useCursorPagination } from "@/hooks/useCursorPagination";
 import { useToast } from "@/hooks/use-toast";
 import { useSearchParams } from "react-router-dom";
+
 import Header from "@/components/Header";
-import SummaryCards from "@/components/SummaryCards";
+import RecentRestockCard from "@/components/dashboard/RecentRestockCard";
+import TopSubscriptionCard from "@/components/dashboard/TopSubscriptionCard";
 import SearchFilter from "@/components/SearchFilter";
 import ModelGrid from "@/components/ModelGrid";
 import ScrollToTopButton from "@/components/ui/ScrollToTopButton";
@@ -15,12 +17,15 @@ export default function Dashboard() {
   const [searchParams, setSearchParams] = useSearchParams();
   const { isLoggedIn } = useAuth();
   const queryClient = useQueryClient();
- const { toast } = useToast();
+  const { toast } = useToast();
 
   const brandIds = useMemo(() => {
     const raw = searchParams.get("brandIds");
     if (!raw) return [] as number[];
-    return raw.split(",").map(Number).filter((n) => !isNaN(n));
+    return raw
+      .split(",")
+      .map(Number)
+      .filter((n) => !isNaN(n));
   }, [searchParams]);
 
   const types = useMemo(() => {
@@ -29,27 +34,21 @@ export default function Dashboard() {
     return raw.split(",").filter(Boolean);
   }, [searchParams]);
 
-
-  // --- API 데이터 조회 ---
+  // 브랜드 조회
   const { data: brands } = useQuery({
     queryKey: ["brands"],
     queryFn: () => brandsApi.getBrands(),
     staleTime: 1000 * 60 * 5,
   });
 
+  // 모델 타입 조회
   const { data: modelTypes } = useQuery({
     queryKey: ["modelTypes"],
     queryFn: () => modelsApi.getModelTypes(),
-    staleTime: Infinity, // 앱 전체에서 거의 변하지 않는 데이터
+    staleTime: Infinity,
   });
 
-  const { data: modelCount } = useQuery({
-    queryKey: ["models", "count"],
-    queryFn: () => modelsApi.getModelCount(),
-    staleTime: 1000 * 60,
-  });
-
-  // --- 필터링된 모델 목록 조회 ---
+  // 모델 목록 조회
   const brandQueryKey = useMemo(() => brandIds.sort().join(","), [brandIds]);
   const typeQueryKey = useMemo(() => types.sort().join(","), [types]);
 
@@ -69,14 +68,13 @@ export default function Dashboard() {
     [modelsData],
   );
 
-  // --- 구독 데이터 ---
+  // 구독 데이터
   const { data: subscriptions } = useQuery({
     queryKey: ["subscriptions"],
     queryFn: () => subscriptionsApi.getSubscriptions(),
     enabled: isLoggedIn,
   });
 
-  // modelId → subscriptionId 매핑 (해제 시 필요)
   const subscriptionMap = useMemo(() => {
     const map = new Map<number, number>();
     subscriptions?.content.forEach((s) => map.set(s.modelId, s.id));
@@ -92,76 +90,83 @@ export default function Dashboard() {
     async (modelId: number) => {
       try {
         const subId = subscriptionMap.get(modelId);
+
         if (subId != null) {
           await subscriptionsApi.unsubscribe(subId);
-          toast({ title: '구독 해제됨' });
+          toast({ title: "구독 해제됨" });
         } else {
           await subscriptionsApi.subscribe({ modelId });
-          toast({ title: '구독 완료' });
+          toast({ title: "구독 완료" });
         }
-        queryClient.invalidateQueries({ queryKey: ['subscriptions'] });
+
+        queryClient.invalidateQueries({ queryKey: ["subscriptions"] });
       } catch {
-        toast({ title: '오류 발생', variant: 'destructive' });
+        toast({ title: "오류 발생", variant: "destructive" });
       }
     },
     [subscriptionMap, queryClient, toast],
   );
 
-  // --- 이벤트 핸들러 ---
-  const handleRefresh = useCallback(() => {
-    queryClient.invalidateQueries({ queryKey: ["models"] });
-    queryClient.invalidateQueries({ queryKey: ["brands"] });
-    queryClient.invalidateQueries({ queryKey: ["modelTypes"] });
-  }, [queryClient]);
+  const updateParams = useCallback(
+    (key: string, value: string | null) => {
+      setSearchParams((prev) => {
+        const next = new URLSearchParams(prev);
 
-  const updateParams = useCallback((key: string, value: string | null) => {
-    setSearchParams((prev) => {
-      const next = new URLSearchParams(prev);
-      if (value) {
-        next.set(key, value);
-      } else {
-        next.delete(key);
-      }
-      return next;
-    });
-  }, [setSearchParams]);
+        if (value) next.set(key, value);
+        else next.delete(key);
 
-  const handleBrandToggle = useCallback((brandId: number) => {
-    const next = brandIds.includes(brandId)
-      ? brandIds.filter((id) => id !== brandId)
-      : [...brandIds, brandId];
-    updateParams("brandIds", next.length > 0 ? next.join(",") : null);
-  }, [brandIds, updateParams]);
+        return next;
+      });
+    },
+    [setSearchParams],
+  );
 
-  const handleClearBrands = useCallback(() => updateParams("brandIds", null), [updateParams]);
+  const handleBrandToggle = useCallback(
+    (brandId: number) => {
+      const next = brandIds.includes(brandId)
+        ? brandIds.filter((id) => id !== brandId)
+        : [...brandIds, brandId];
 
-  const handleTypeToggle = useCallback((typeCode: string) => {
-    const next = types.includes(typeCode)
-      ? types.filter((c) => c !== typeCode)
-      : [...types, typeCode];
-    updateParams("types", next.length > 0 ? next.join(",") : null);
-  }, [types, updateParams]);
+      updateParams("brandIds", next.length ? next.join(",") : null);
+    },
+    [brandIds, updateParams],
+  );
 
-  const handleClearTypes = useCallback(() => updateParams("types", null), [updateParams]);
+  const handleTypeToggle = useCallback(
+    (typeCode: string) => {
+      const next = types.includes(typeCode)
+        ? types.filter((c) => c !== typeCode)
+        : [...types, typeCode];
 
-  const handleClearAllFilters = useCallback(() => {
+      updateParams("types", next.length ? next.join(",") : null);
+    },
+    [types, updateParams],
+  );
+
+  const handleClearBrands = () => updateParams("brandIds", null);
+  const handleClearTypes = () => updateParams("types", null);
+
+  const handleClearAllFilters = () => {
     setSearchParams((prev) => {
       const next = new URLSearchParams(prev);
       next.delete("brandIds");
       next.delete("types");
       return next;
     });
-  }, [setSearchParams]);
+  };
 
   return (
     <div className="min-h-screen bg-background bg-noise">
-      <Header onRefresh={handleRefresh} />
+      <Header />
 
       <main className="container py-6 space-y-6 relative z-10">
-        <SummaryCards
-          totalModels={modelCount ?? 0}
-          totalBrands={brands?.length ?? 0}
-        />
+        {/* Dashboard Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <RecentRestockCard />
+          <TopSubscriptionCard />
+        </div>
+
+        {/* Filter */}
         <SearchFilter
           brands={brands ?? []}
           selectedBrandIds={brandIds}
@@ -174,6 +179,7 @@ export default function Dashboard() {
           onClearAll={handleClearAllFilters}
         />
 
+        {/* Model Grid */}
         <ModelGrid
           models={allModels}
           isLoading={isLoading}
@@ -185,6 +191,7 @@ export default function Dashboard() {
           onToggleSubscribe={isLoggedIn ? handleToggleSubscribe : undefined}
         />
       </main>
+
       <ScrollToTopButton />
     </div>
   );
