@@ -135,12 +135,49 @@ export interface SubscribeRequest {
 
 // ── Dashboard ──
 
+export interface OptionPriceItemDto {
+  optionLabel: string;
+  price: number;
+  status: boolean;
+  url: string;
+}
+
+export interface SiteComparisonItemDto {
+  siteName: string;
+  options: OptionPriceItemDto[];
+}
+
 export interface PriceComparisonDto {
   modelName: string;
   imageUrl: string;
-  sites: unknown[]; // API가 껍데기라 상세 타입 미정
+  sites: SiteComparisonItemDto[];
 }
 
 export interface PriceComparisonParams {
   modelId: number;
+}
+
+// ── Price History ──
+
+export interface DailyPriceDto {
+  date: string;
+  price: number;
+}
+
+export interface SitePriceHistoryDto {
+  siteName: string;
+  currentPrice: number | null;
+  priceChange: number | null;
+  minPrice: number | null;
+  maxPrice: number | null;
+  history: DailyPriceDto[];
+}
+
+export interface PriceHistoryDto {
+  sites: SitePriceHistoryDto[];
+}
+
+export interface PriceHistoryParams {
+  modelId: number;
+  days?: number;
 }

@@ -1,13 +1,42 @@
+import { useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { modelsApi, siteOptionsApi, subscriptionsApi } from '@/api';
+import { modelsApi, dashboardApi, subscriptionsApi } from '@/api';
 import Header from '@/components/Header';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
-import { ArrowLeft, Bell, BellOff, Loader2 } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { ArrowLeft, BarChart3, Bell, BellOff, ChevronDown, Loader2, Store, ExternalLink } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import type { SiteComparisonItemDto } from '@/types/api';
+import PriceTrendChart from '@/components/PriceTrendChart';
+
+/** 피벗: 사이트→옵션 구조를 옵션→사이트 구조로 변환 */
+interface OptionGroup {
+  optionLabel: string;
+  sites: { siteName: string; price: number; status: boolean; url: string }[];
+}
+
+function pivotToOptionGroups(sites: SiteComparisonItemDto[]): OptionGroup[] {
+  const map = new Map<string, OptionGroup>();
+  for (const site of sites) {
+    for (const opt of site.options) {
+      let group = map.get(opt.optionLabel);
+      if (!group) {
+        group = { optionLabel: opt.optionLabel, sites: [] };
+        map.set(opt.optionLabel, group);
+      }
+      group.sites.push({
+        siteName: site.siteName,
+        price: opt.price,
+        status: opt.status,
+        url: opt.url,
+      });
+    }
+  }
+  return Array.from(map.values());
+}
 
 export default function ModelDetailPage() {
   const { modelId } = useParams<{ modelId: string }>();
@@ -16,19 +45,26 @@ export default function ModelDetailPage() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
+  const [expandedLabel, setExpandedLabel] = useState<string | null>(null);
+
   const { data: model, isLoading } = useQuery({
     queryKey: ['model', modelIdNum],
     queryFn: () => modelsApi.getModel(modelIdNum),
     enabled: !!modelId && !isNaN(modelIdNum),
   });
 
-  const { data: siteOptions } = useQuery({
-    queryKey: ['siteOptions', modelIdNum],
-    queryFn: () => siteOptionsApi.getSiteOptions({ modelId: modelIdNum }),
+  const { data: priceComparison } = useQuery({
+    queryKey: ['priceComparison', modelIdNum],
+    queryFn: () => dashboardApi.getPriceComparison({ modelId: modelIdNum }),
     enabled: !!modelId && !isNaN(modelIdNum),
   });
 
-  // 구독 상태
+  const { data: priceHistory } = useQuery({
+    queryKey: ['priceHistory', modelIdNum],
+    queryFn: () => dashboardApi.getPriceHistory({ modelId: modelIdNum }),
+    enabled: !!modelId && !isNaN(modelIdNum),
+  });
+
   const { data: subs } = useQuery({
     queryKey: ['subscriptions'],
     queryFn: () => subscriptionsApi.getSubscriptions(),
@@ -81,7 +117,8 @@ export default function ModelDetailPage() {
     );
   }
 
-  const options = siteOptions?.content ?? [];
+  const optionGroups = pivotToOptionGroups(priceComparison?.sites ?? []);
+  const totalSites = priceComparison?.sites.length ?? 0;
 
   return (
     <div className="min-h-screen bg-background bg-noise">
@@ -122,44 +159,7 @@ export default function ModelDetailPage() {
                 {model.brandNameKo || model.brandName}
               </p>
               <h1 className="text-2xl font-bold font-display mt-1 text-foreground">{model.modelName}</h1>
-              {model.lowestPrice != null && (
-                <p className="mt-1.5 text-xl font-bold font-display text-foreground">
-                  ₩{model.lowestPrice.toLocaleString()}
-                </p>
-              )}
             </div>
-
-            {/* 사이트별 옵션 */}
-            {options.length > 0 && (
-              <div className="glass-card rounded-xl overflow-hidden">
-                <table className="w-full text-sm">
-                  <thead>
-                    <tr className="border-b border-border text-muted-foreground text-xs">
-                      <th className="text-left p-3 font-medium">편집샵</th>
-                      <th className="text-left p-3 font-medium">옵션</th>
-                      <th className="text-right p-3 font-medium">가격</th>
-                      <th className="text-center p-3 font-medium">상태</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {options.map((opt) => (
-                      <tr key={opt.id} className="border-b border-border/50 last:border-0">
-                        <td className="p-3 font-medium">{opt.siteName}</td>
-                        <td className="p-3 text-muted-foreground">{opt.optionLabel}</td>
-                        <td className="p-3 text-right font-display font-semibold">
-                          ₩{opt.price.toLocaleString()}
-                        </td>
-                        <td className="p-3 text-center">
-                          <Badge variant="outline" className={opt.status ? 'status-available' : 'status-soldout'}>
-                            {opt.status ? '재고' : '품절'}
-                          </Badge>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
 
             {/* 구독 */}
             {isLoggedIn && (
@@ -175,6 +175,91 @@ export default function ModelDetailPage() {
                 )}
               </div>
             )}
+
+            {/* 옵션별 그룹 (기존 OptionsTable 디자인) */}
+            {optionGroups.length > 0 && (
+              <div className="space-y-1.5">
+                {optionGroups.map((group) => {
+                  const isExpanded = expandedLabel === group.optionLabel;
+                  const availableSites = group.sites.filter((s) => s.status).length;
+
+                  return (
+                    <div key={group.optionLabel} className="rounded-lg border border-border overflow-hidden">
+                      <button
+                        onClick={() => setExpandedLabel(isExpanded ? null : group.optionLabel)}
+                        className="w-full flex items-center justify-between px-4 py-2.5 hover:bg-secondary/50 transition-colors"
+                      >
+                        <div className="flex items-center gap-3">
+                          <span className="font-semibold font-display text-sm text-foreground">{group.optionLabel}</span>
+                          <Badge
+                            variant="outline"
+                            className={`text-[10px] font-medium ${availableSites > 0 ? 'status-available' : 'status-soldout'}`}
+                          >
+                            {availableSites}/{totalSites} 사이트
+                          </Badge>
+                        </div>
+                        <ChevronDown className={`h-4 w-4 text-muted-foreground transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`} />
+                      </button>
+
+                      <AnimatePresence>
+                        {isExpanded && (
+                          <motion.div
+                            initial={{ height: 0, opacity: 0 }}
+                            animate={{ height: 'auto', opacity: 1 }}
+                            exit={{ height: 0, opacity: 0 }}
+                            transition={{ duration: 0.2 }}
+                            className="overflow-hidden border-t border-border"
+                          >
+                            <div className="divide-y divide-border">
+                              {group.sites.map((site) => (
+                                <div key={site.siteName} className="flex items-center justify-between px-4 py-2 hover:bg-secondary/30 transition-colors">
+                                  <div className="flex items-center gap-2">
+                                    <Store className="h-3.5 w-3.5 text-muted-foreground" />
+                                    <span className="text-sm text-foreground">{site.siteName}</span>
+                                    <Badge
+                                      variant="outline"
+                                      className={`text-[9px] ${site.status ? 'status-available' : 'status-soldout'}`}
+                                    >
+                                      {site.status ? '재고' : '품절'}
+                                    </Badge>
+                                  </div>
+                                  <div className="flex items-center gap-2.5">
+                                    <span className="text-sm font-medium text-foreground">
+                                      {site.price != null ? `₩${site.price.toLocaleString()}` : '—'}
+                                    </span>
+                                    {site.url && (
+                                      <a
+                                        href={site.url}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="text-muted-foreground hover:text-primary transition-colors"
+                                      >
+                                        <ExternalLink className="h-3.5 w-3.5" />
+                                      </a>
+                                    )}
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+
+            {/* 가격 추이 차트 */}
+            {priceHistory && priceHistory.sites.length > 0 ? (
+              <PriceTrendChart sites={priceHistory.sites} />
+            ) : (
+              <div className="glass-card rounded-xl p-5 flex flex-col items-center justify-center gap-2 py-10">
+                <BarChart3 className="h-6 w-6 text-muted-foreground/40" />
+                <p className="text-sm text-muted-foreground">아직 가격 이력이 없습니다</p>
+              </div>
+            )}
+
           </motion.div>
         </div>
       </main>
