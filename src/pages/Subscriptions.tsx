@@ -1,10 +1,9 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
-import { api } from '@/api/client';
+import { subscriptionsApi } from '@/api';
 import Header from '@/components/Header';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { BellOff, Eye, Package, Loader2 } from 'lucide-react';
 import { useEffect } from 'react';
@@ -22,19 +21,21 @@ export default function SubscriptionsPage() {
 
   const { data: subs, isLoading } = useQuery({
     queryKey: ['subscriptions'],
-    queryFn: () => api.getSubscriptions(),
+    queryFn: () => subscriptionsApi.getSubscriptions(),
     enabled: isLoggedIn,
   });
 
-  const handleUnsubscribe = async (productKey: string) => {
+  const handleUnsubscribe = async (id: number) => {
     try {
-      await api.unsubscribe(productKey);
+      await subscriptionsApi.unsubscribe(id);
       toast({ title: '구독 해제됨' });
       queryClient.invalidateQueries({ queryKey: ['subscriptions'] });
     } catch {
       toast({ title: '오류 발생', variant: 'destructive' });
     }
   };
+
+  const items = subs?.content ?? [];
 
   return (
     <div className="min-h-screen bg-background bg-noise">
@@ -50,39 +51,28 @@ export default function SubscriptionsPage() {
           <div className="flex items-center justify-center py-20">
             <Loader2 className="h-6 w-6 animate-spin text-primary" />
           </div>
-        ) : subs && subs.length > 0 ? (
+        ) : items.length > 0 ? (
           <div className="space-y-2">
-            {subs.map((sub, i) => (
+            {items.map((sub, i) => (
               <motion.div
-                key={sub.productKey}
+                key={sub.id}
                 initial={{ opacity: 0, y: 8 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: i * 0.04 }}
                 className="glass-card rounded-xl flex items-center gap-4 p-4"
               >
-                {sub.productImage && (
-                  <img src={sub.productImage} alt="" className="h-14 w-14 rounded-lg object-cover flex-shrink-0" />
+                {sub.imageUrl && (
+                  <img src={sub.imageUrl} alt="" className="h-14 w-14 rounded-lg object-cover flex-shrink-0" />
                 )}
                 <div className="flex-1 min-w-0">
-                  <p className="text-[10px] font-semibold tracking-[0.15em] uppercase text-primary">{sub.brand}</p>
-                  <p className="truncate font-semibold font-display text-sm text-foreground">{sub.productName}</p>
-                  <div className="mt-1 flex gap-1 flex-wrap">
-                    <Badge variant="outline" className="text-[10px] font-medium">
-                      {sub.mode === 'ALL_OPTIONS' ? '전체 옵션' : `선택 ${sub.selectedOptionIds.length}개`}
-                    </Badge>
-                    {sub.optionsSummary && sub.optionsSummary.availableCount > 0 && (
-                      <Badge variant="outline" className="status-available text-[10px]">{sub.optionsSummary.availableCount} 재고</Badge>
-                    )}
-                    {sub.optionsSummary && sub.optionsSummary.soldOutCount > 0 && (
-                      <Badge variant="outline" className="status-soldout text-[10px]">{sub.optionsSummary.soldOutCount} 품절</Badge>
-                    )}
-                  </div>
+                  <p className="text-[10px] font-semibold tracking-[0.15em] uppercase text-primary">{sub.brandName}</p>
+                  <p className="truncate font-semibold font-display text-sm text-foreground">{sub.modelName}</p>
                 </div>
                 <div className="flex gap-1 flex-shrink-0">
-                  <Button size="icon" variant="ghost" className="h-8 w-8 text-muted-foreground hover:text-foreground" onClick={() => navigate(`/product/${sub.productKey}`)}>
+                  <Button size="icon" variant="ghost" className="h-8 w-8 text-muted-foreground hover:text-foreground" onClick={() => navigate(`/model/${sub.modelId}`)}>
                     <Eye className="h-4 w-4" />
                   </Button>
-                  <Button size="icon" variant="ghost" className="h-8 w-8 text-muted-foreground hover:text-destructive" onClick={() => handleUnsubscribe(sub.productKey)}>
+                  <Button size="icon" variant="ghost" className="h-8 w-8 text-muted-foreground hover:text-destructive" onClick={() => handleUnsubscribe(sub.id)}>
                     <BellOff className="h-4 w-4" />
                   </Button>
                 </div>

@@ -42,3 +42,8 @@ export function getModelTypes() {
 export function getModelCount() {
   return unwrap<number>(http.get("/api/models/count"));
 }
+
+/** GET /api/models/:id */
+export function getModel(id: number) {
+  return unwrap<ModelDto>(http.get(`/api/models/${id}`));
+}

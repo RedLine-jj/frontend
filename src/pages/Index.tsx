@@ -1,7 +1,9 @@
 import { useState, useCallback, useMemo } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { modelsApi, brandsApi } from "@/api";
+import { modelsApi, brandsApi, subscriptionsApi } from "@/api";
+import { useAuth } from "@/contexts/AuthContext";
 import { useCursorPagination } from "@/hooks/useCursorPagination";
+import { useToast } from "@/hooks/use-toast";
 import Header from "@/components/Header";
 import SummaryCards from "@/components/SummaryCards";
 import SearchFilter from "@/components/SearchFilter";
@@ -11,7 +13,9 @@ import ScrollToTopButton from "@/components/ui/ScrollToTopButton";
 export default function Dashboard() {
   const [brandIds, setBrandIds] = useState<number[]>([]);
   const [types, setTypes] = useState<string[]>([]);
+  const { isLoggedIn } = useAuth();
   const queryClient = useQueryClient();
+  const { toast } = useToast();
 
   // --- API 데이터 조회 ---
   const { data: brands } = useQuery({
@@ -50,6 +54,44 @@ export default function Dashboard() {
   const allModels = useMemo(
     () => modelsData?.pages.flatMap((p) => p.content) ?? [],
     [modelsData],
+  );
+
+  // --- 구독 데이터 ---
+  const { data: subscriptions } = useQuery({
+    queryKey: ["subscriptions"],
+    queryFn: () => subscriptionsApi.getSubscriptions(),
+    enabled: isLoggedIn,
+  });
+
+  // modelId → subscriptionId 매핑 (해제 시 필요)
+  const subscriptionMap = useMemo(() => {
+    const map = new Map<number, number>();
+    subscriptions?.content.forEach((s) => map.set(s.modelId, s.id));
+    return map;
+  }, [subscriptions]);
+
+  const subscribedModelIds = useMemo(
+    () => new Set(subscriptionMap.keys()),
+    [subscriptionMap],
+  );
+
+  const handleToggleSubscribe = useCallback(
+    async (modelId: number) => {
+      try {
+        const subId = subscriptionMap.get(modelId);
+        if (subId != null) {
+          await subscriptionsApi.unsubscribe(subId);
+          toast({ title: '구독 해제됨' });
+        } else {
+          await subscriptionsApi.subscribe({ modelId });
+          toast({ title: '구독 완료' });
+        }
+        queryClient.invalidateQueries({ queryKey: ['subscriptions'] });
+      } catch {
+        toast({ title: '오류 발생', variant: 'destructive' });
+      }
+    },
+    [subscriptionMap, queryClient, toast],
   );
 
   // --- 이벤트 핸들러 ---
@@ -106,6 +148,8 @@ export default function Dashboard() {
           isFetchingNextPage={isFetchingNextPage}
           hasNextPage={hasNextPage}
           fetchNextPage={fetchNextPage}
+          subscribedModelIds={isLoggedIn ? subscribedModelIds : undefined}
+          onToggleSubscribe={isLoggedIn ? handleToggleSubscribe : undefined}
         />
       </main>
       <ScrollToTopButton />

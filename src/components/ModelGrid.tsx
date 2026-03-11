@@ -11,6 +11,8 @@ interface ModelGridProps {
   isFetchingNextPage: boolean;
   hasNextPage: boolean | undefined;
   fetchNextPage: () => void;
+  subscribedModelIds?: Set<number>;
+  onToggleSubscribe?: (modelId: number) => void;
 }
 
 export default function ModelGrid({
@@ -20,6 +22,8 @@ export default function ModelGrid({
   isFetchingNextPage,
   hasNextPage,
   fetchNextPage,
+  subscribedModelIds,
+  onToggleSubscribe,
 }: ModelGridProps) {
   // 무한 스크롤을 위한 sentinel 요소
   const sentinelRef = useRef<HTMLDivElement>(null);
@@ -83,7 +87,7 @@ export default function ModelGrid({
     <>
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
         {models.map((model) => (
-          <ModelCard key={model.id} model={model} />
+          <ModelCard key={model.id} model={model} isSubscribed={subscribedModelIds?.has(model.id)} onToggleSubscribe={onToggleSubscribe} />
         ))}
       </div>
 
