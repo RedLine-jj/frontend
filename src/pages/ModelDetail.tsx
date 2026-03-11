@@ -11,6 +11,7 @@ import { ArrowLeft, BarChart3, Bell, BellOff, ChevronDown, Loader2, Store, Exter
 import { motion, AnimatePresence } from 'framer-motion';
 import type { SiteComparisonItemDto } from '@/types/api';
 import PriceTrendChart from '@/components/PriceTrendChart';
+import {
 
 /** 피벗: 사이트→옵션 구조를 옵션→사이트 구조로 변환 */
 interface OptionGroup {
