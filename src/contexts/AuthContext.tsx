@@ -21,9 +21,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const stored = localStorage.getItem(USER_KEY);
     return stored ? JSON.parse(stored) : null;
   });
-  const [isInitialized, setIsInitialized] = useState(false);
+  const [isInitialized, setIsInitialized] = useState(() => {
+    // refreshToken이 없으면 복원할 세션이 없으므로 즉시 초기화 완료
+    // → 비로그인 사용자에게 불필요한 로딩 flash 방지
+    return !tokenStore.getRefresh();
+  });
 
-  // 새로고침 시: refreshToken이 있으면 accessToken 재발급 시도
+  // 새로고침 시: refreshToken으로 accessToken 재발급
   useEffect(() => {
     const restore = async () => {
       const refreshToken = tokenStore.getRefresh();
@@ -37,7 +41,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return;
       }
       try {
-        // 인터셉터의 refresh 로직과 동일한 엔드포인트
         const { default: axios } = await import('axios');
         const { data } = await axios.post(
           `${import.meta.env.VITE_API_URL}/api/auth/refresh`,
@@ -82,7 +85,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   return (
     <AuthContext.Provider value={{ user, isLoggedIn: !!user, isInitialized, login, signup, logout }}>
-      {children}
+      {isInitialized ? children : (
+        <div className="flex h-screen items-center justify-center">
+          <div className="h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+        </div>
+      )}
     </AuthContext.Provider>
   );
 }

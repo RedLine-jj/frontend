@@ -11,14 +11,14 @@ import { useEffect } from 'react';
 import { motion } from 'framer-motion';
 
 export default function SubscriptionsPage() {
-  const { isLoggedIn } = useAuth();
+  const { isLoggedIn, isInitialized } = useAuth();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
   useEffect(() => {
-    if (!isLoggedIn) navigate('/login');
-  }, [isLoggedIn, navigate]);
+    if (isInitialized && !isLoggedIn) navigate('/login');
+  }, [isLoggedIn, isInitialized, navigate]);
 
   const { data: subs, isLoading } = useQuery({
     queryKey: ['subscriptions'],
