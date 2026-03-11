@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
+import { Star } from "lucide-react";
 import RollingCard from "./RollingCard";
 import { subscriptionStatsApi } from "@/api/subscriptionStatsApi";
 
@@ -26,10 +27,11 @@ export default function TopSubscriptionCard() {
 
   return (
     <RollingCard
-      title="🔔 알림 설정 TOP10"
+      title="알림 설정 TOP 10"
+      icon={Star}
       items={items}
-      onItemClick={(id) => navigate(`/model/${id}`)}
       showRank
+      onItemClick={(id) => navigate(`/model/${id}`)}
     />
   );
 }

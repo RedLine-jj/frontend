@@ -11,6 +11,7 @@ interface Props {
   title: string;
   items: RollingItem[];
   onItemClick?: (id: number) => void;
+  icon?: React.ElementType;
   showRank?: boolean;
 }
 
@@ -20,6 +21,7 @@ export default function RollingCard({
   title,
   items,
   onItemClick,
+  icon: Icon,
   showRank = false,
 }: Props) {
   const [index, setIndex] = useState(0);
@@ -45,24 +47,33 @@ export default function RollingCard({
   });
 
   return (
-    <div className="rounded-xl border bg-background p-5 h-28 flex flex-col justify-between hover:shadow-md transition">
-      <h3 className="text-sm font-semibold text-foreground">{title}</h3>
+    <div className="rounded-xl border bg-card p-5 hover:shadow-md hover:-translate-y-0.5 transition-all duration-200">
+      {/* header */}
+      <div className="flex items-center gap-2 mb-3 pb-2 border-b">
+        {Icon && (
+          <div className="bg-muted p-1.5 rounded-md">
+            <Icon size={14} />
+          </div>
+        )}
+        <h3 className="text-sm font-semibold">{title}</h3>
+      </div>
 
-      <div className="relative overflow-hidden space-y-1">
+      {/* rolling list */}
+      <div className="relative overflow-hidden space-y-2">
         <AnimatePresence mode="wait">
           <motion.div
             key={index}
-            initial={{ y: 20, opacity: 0 }}
+            initial={{ y: 16, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
-            exit={{ y: -20, opacity: 0 }}
+            exit={{ y: -16, opacity: 0 }}
             transition={{ duration: 0.35 }}
-            className="space-y-1"
+            className="space-y-2"
           >
             {visibleItems.map((item) => (
               <div
                 key={item.id}
                 onClick={() => onItemClick?.(item.id)}
-                className="flex justify-between items-center text-sm cursor-pointer hover:text-primary transition"
+                className="flex justify-between items-center text-sm cursor-pointer hover:text-primary transition-colors"
               >
                 <span className="flex items-center gap-2 truncate max-w-[70%]">
                   {showRank && (

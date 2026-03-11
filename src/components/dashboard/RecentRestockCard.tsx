@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
+import { BellRing } from "lucide-react";
 import RollingCard from "./RollingCard";
 import { restocksApi } from "@/api/restocksApi";
 
@@ -40,12 +41,13 @@ export default function RecentRestockCard() {
     data?.slice(0, 10).map((r) => ({
       id: r.modelId,
       label: r.modelName,
-      subLabel: `${r.siteName} · ${formatTimeAgo(r.restockedAt)}`,
+      subLabel: `${r.siteName} • ${formatTimeAgo(r.restockedAt)}`,
     })) ?? [];
 
   return (
     <RollingCard
-      title="🔥 최근 재입고"
+      title="최근 재입고"
+      icon={BellRing}
       items={items}
       onItemClick={(id) => navigate(`/model/${id}`)}
     />
