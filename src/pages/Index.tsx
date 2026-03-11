@@ -144,6 +144,15 @@ export default function Dashboard() {
 
   const handleClearTypes = useCallback(() => updateParams("types", null), [updateParams]);
 
+  const handleClearAllFilters = useCallback(() => {
+    setSearchParams((prev) => {
+      const next = new URLSearchParams(prev);
+      next.delete("brandIds");
+      next.delete("types");
+      return next;
+    });
+  }, [setSearchParams]);
+
   return (
     <div className="min-h-screen bg-background bg-noise">
       <Header onRefresh={handleRefresh} />
@@ -162,6 +171,7 @@ export default function Dashboard() {
           selectedTypes={types}
           onTypeToggle={handleTypeToggle}
           onClearTypes={handleClearTypes}
+          onClearAll={handleClearAllFilters}
         />
 
         <ModelGrid
