@@ -122,17 +122,15 @@ export interface SiteOptionsParams extends CursorParams {
 
 export interface SubscriptionDto {
   id: number;
-  siteOptionId: number;
-  siteName: string;
+  modelId: number;
+  brandName: string;
   modelName: string;
-  optionLabel: string;
-  price: number;
-  optionStatus: boolean;
+  imageUrl: string;
   createdAt: string;
 }
 
 export interface SubscribeRequest {
-  siteOptionId: number;
+  modelId: number;
 }
 
 // ── Dashboard ──

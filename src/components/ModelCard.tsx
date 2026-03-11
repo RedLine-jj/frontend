@@ -1,12 +1,16 @@
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
+import { Bell, BellOff } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import type { ModelDto } from '@/types/api';
 
 interface ModelCardProps {
   model: ModelDto;
+  isSubscribed?: boolean;
+  onToggleSubscribe?: (modelId: number) => void;
 }
 
-export default function ModelCard({ model }: ModelCardProps) {
+export default function ModelCard({ model, isSubscribed, onToggleSubscribe }: ModelCardProps) {
   const navigate = useNavigate();
 
   return (
@@ -31,6 +35,13 @@ export default function ModelCard({ model }: ModelCardProps) {
             No Image
           </div>
         )}
+        {isSubscribed && (
+          <div className="absolute top-3 right-3">
+            <div className="flex h-7 w-7 items-center justify-center rounded-full bg-primary shadow-md">
+              <Bell className="h-3.5 w-3.5 text-primary-foreground" />
+            </div>
+          </div>
+        )}
         <p className="absolute bottom-1.5 right-2 text-[9px] text-black/60">출처: 모드맨</p>
       </div>
 
@@ -52,6 +63,18 @@ export default function ModelCard({ model }: ModelCardProps) {
             <p className="text-xs text-muted-foreground">가격 정보 없음</p>
           )}
         </div>
+
+        {onToggleSubscribe && (
+          <Button
+            size="sm"
+            variant={isSubscribed ? 'outline' : 'default'}
+            className="w-full h-8 text-xs font-medium mt-1"
+            onClick={(e) => { e.stopPropagation(); onToggleSubscribe(model.id); }}
+          >
+            {isSubscribed ? <BellOff className="mr-1 h-3 w-3" /> : <Bell className="mr-1 h-3 w-3" />}
+            {isSubscribed ? '구독 해제' : '구독'}
+          </Button>
+        )}
       </div>
     </motion.div>
   );
