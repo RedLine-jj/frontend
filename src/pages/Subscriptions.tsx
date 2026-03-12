@@ -30,6 +30,7 @@ export default function SubscriptionsPage() {
       await subscriptionsApi.unsubscribe(id);
       toast({ title: '구독 해제됨' });
       queryClient.invalidateQueries({ queryKey: ['subscriptions'] });
+      queryClient.invalidateQueries({ queryKey: ['top-subscriptions'] });
     } catch {
       toast({ title: '오류 발생', variant: 'destructive' });
     }

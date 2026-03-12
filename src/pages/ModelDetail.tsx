@@ -108,6 +108,7 @@ export default function ModelDetailPage() {
       await subscriptionsApi.subscribe({ modelId: modelIdNum });
       toast({ title: "구독 완료" });
       queryClient.invalidateQueries({ queryKey: ["subscriptions"] });
+      queryClient.invalidateQueries({ queryKey: ["top-subscriptions"] });
     } catch {
       toast({ title: "오류 발생", variant: "destructive" });
     }
@@ -119,6 +120,7 @@ export default function ModelDetailPage() {
       await subscriptionsApi.unsubscribe(currentSub.id);
       toast({ title: "구독 해제됨" });
       queryClient.invalidateQueries({ queryKey: ["subscriptions"] });
+      queryClient.invalidateQueries({ queryKey: ["top-subscriptions"] });
     } catch {
       toast({ title: "오류 발생", variant: "destructive" });
     }
