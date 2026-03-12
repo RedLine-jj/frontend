@@ -100,6 +100,7 @@ export default function Dashboard() {
         }
 
         queryClient.invalidateQueries({ queryKey: ["subscriptions"] });
+        queryClient.invalidateQueries({ queryKey: ["top-subscriptions"] });
       } catch {
         toast({ title: "오류 발생", variant: "destructive" });
       }
