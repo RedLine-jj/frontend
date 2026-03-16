@@ -9,6 +9,7 @@ import Index from "./pages/Index";
 import ModelDetail from "./pages/ModelDetail";
 import Login from "./pages/Login";
 import Subscriptions from "./pages/Subscriptions";
+import Notifications from "./pages/Notifications";
 import Signup from "./pages/Signup";
 import ForgotPassword from "./pages/ForgotPassword";
 import NotFound from "./pages/NotFound";
@@ -35,6 +36,7 @@ const App = () => (
             <Route path="/signup" element={<Signup />} />
             <Route path="/forgot-password" element={<ForgotPassword />} />
             <Route path="/subscriptions" element={<Subscriptions />} />
+            <Route path="/notifications" element={<Notifications />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
