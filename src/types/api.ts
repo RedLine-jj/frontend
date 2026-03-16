@@ -181,3 +181,21 @@ export interface PriceHistoryParams {
   modelId: number;
   days?: number;
 }
+
+// ── Notifications ──
+
+export interface NotificationDto {
+  id: number;
+  modelId: number;
+  brandName: string;
+  modelName: string;
+  imageUrl: string;
+  readYn: boolean;
+  createdAt: string;
+}
+
+export interface RestockSseEvent {
+  modelId: number;
+  modelName: string;
+  brandName: string;
+}

@@ -11,3 +11,4 @@ export * as modelsApi from './models';
 export * as siteOptionsApi from './siteOptions';
 export * as subscriptionsApi from './subscriptions';
 export * as dashboardApi from './dashboard';
+export * as notificationsApi from './notifications';
