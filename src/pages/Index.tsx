@@ -63,10 +63,15 @@ export default function Dashboard() {
     modelsApi.getModels({ brandIds, types, cursor, size: 20 }),
   );
 
-  const allModels = useMemo(
-    () => modelsData?.pages.flatMap((p) => p.content) ?? [],
-    [modelsData],
-  );
+  const allModels = useMemo(() => {
+    const items = modelsData?.pages.flatMap((p) => p.content) ?? [];
+    const seen = new Set<number>();
+    return items.filter((item) => {
+      if (seen.has(item.id)) return false;
+      seen.add(item.id);
+      return true;
+    });
+  }, [modelsData]);
 
   // 구독 데이터
   const { data: subscriptions } = useQuery({
