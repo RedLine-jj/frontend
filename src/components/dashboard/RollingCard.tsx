@@ -69,9 +69,9 @@ export default function RollingCard({
             transition={{ duration: 0.35 }}
             className="space-y-2"
           >
-            {visibleItems.map((item) => (
+            {visibleItems.map((item, i) => (
               <div
-                key={item.id}
+                key={`${item.id}-${i}`}
                 onClick={() => onItemClick?.(item.id)}
                 className="flex justify-between items-center text-sm cursor-pointer hover:text-primary transition-colors"
               >
